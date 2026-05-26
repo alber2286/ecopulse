@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Auditoría{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-shield-check" style="margin-right:6px"></i>Registro de auditoría</div>
+    </div>
+    <div class="page-content">
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Acción</th><th>Detalle</th><th>IP</th></tr></thead>
+          <tbody>
+          {% for l in logs %}
+          <tr>
+            <td style="white-space:nowrap">{{ l.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ l.usuario }}</td>
+            <td><span class="badge badge-gray">{{ l.rol }}</span></td>
+            <td><strong>{{ l.accion }}</strong></td>
+            <td style="font-size:12px;color:#6B7280">{{ l.detalle or '—' }}</td>
+            <td style="font-size:12px;color:#9CA3AF">{{ l.ip }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="empty-state"><i class="ti ti-shield"></i>Sin registros</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

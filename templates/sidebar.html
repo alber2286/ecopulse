@@ -1,0 +1,58 @@
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">
+      <div class="brand-icon"><i class="ti ti-bolt"></i></div>
+      <div>
+        <div class="brand-name">EcoPulse</div>
+        <div class="brand-sub">by MAGO Solutions</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <a href="/dashboard" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+        <i class="ti ti-layout-dashboard"></i>Dashboard
+      </a>
+      <a href="/maquinas" class="nav-item {% if '/maquinas' in request.path %}active{% endif %}">
+        <i class="ti ti-device-gamepad-2"></i>Máquinas
+      </a>
+      <a href="/cobros" class="nav-item {% if '/cobros' in request.path %}active{% endif %}">
+        <i class="ti ti-calculator"></i>Cobros
+      </a>
+      <a href="/reparaciones" class="nav-item {% if '/reparaciones' in request.path %}active{% endif %}">
+        <i class="ti ti-tool"></i>Reparaciones
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Análisis</div>
+      <a href="/mapa" class="nav-item {% if '/mapa' in request.path %}active{% endif %}">
+        <i class="ti ti-map-2"></i>Mapa
+      </a>
+      <a href="/exportar" class="nav-item {% if '/exportar' in request.path %}active{% endif %}">
+        <i class="ti ti-download"></i>Exportar
+      </a>
+    </div>
+    {% if current_user.rol == 'admin' %}
+    <div class="nav-section">
+      <div class="nav-label">Administración</div>
+      <a href="/usuarios" class="nav-item {% if '/usuarios' in request.path %}active{% endif %}">
+        <i class="ti ti-users"></i>Usuarios
+      </a>
+      <a href="/audit" class="nav-item {% if '/audit' in request.path %}active{% endif %}">
+        <i class="ti ti-shield-check"></i>Auditoría
+      </a>
+    </div>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ current_user.nombre[:2].upper() }}</div>
+      <div style="flex:1;min-width:0">
+        <div class="user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ current_user.nombre }}</div>
+        <div class="user-rol">{{ current_user.rol.replace('_',' ').title() }}</div>
+      </div>
+      <a href="/logout" title="Cerrar sesión" style="color:#6B7280;font-size:18px"><i class="ti ti-logout"></i></a>
+    </div>
+  </div>
+</div>

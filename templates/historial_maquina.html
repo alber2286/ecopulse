@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Historial — {{ m.serie }}{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title">
+        <a href="/maquinas" style="color:#6B7280;margin-right:8px"><i class="ti ti-arrow-left"></i></a>
+        <span class="led led-{{ m.led_color() }}" style="margin-right:8px"></span>
+        Historial — {{ m.serie }}
+      </div>
+      <div style="font-size:13px;color:#6B7280">{{ m.nombre_punto or m.zona }} · {{ m.estado_label() }}</div>
+    </div>
+    <div class="page-content">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem">
+        <div class="metric-card"><div class="metric-label">Zona actual</div><div style="font-size:15px;font-weight:600">{{ m.zona or '—' }}</div></div>
+        <div class="metric-card"><div class="metric-label">Punto</div><div style="font-size:15px;font-weight:600">{{ m.nombre_punto or '—' }}</div></div>
+        <div class="metric-card"><div class="metric-label">M. Entrada</div><div style="font-size:15px;font-weight:600">{{ "%.0f"|format(m.marcador_entrada) }}</div></div>
+        <div class="metric-card"><div class="metric-label">M. Salida</div><div style="font-size:15px;font-weight:600">{{ "%.0f"|format(m.marcador_salida) }}</div></div>
+        <div class="metric-card"><div class="metric-label">Total cobros</div><div style="font-size:15px;font-weight:600">{{ cobros|length }}</div></div>
+        <div class="metric-card"><div class="metric-label">Neto acumulado</div><div style="font-size:15px;font-weight:600;color:#059669">${{ "%.0f"|format(cobros|sum(attribute='neto')) }}</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title"><i class="ti ti-calculator"></i>Historial de cobros</div>
+        {% if cobros %}
+        <table>
+          <thead><tr><th>Fecha</th><th>Semana</th><th>Cobrador</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>Neto G</th><th>Nota</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for c in cobros %}
+          <tr>
+            <td>{{ c.fecha.strftime('%d/%m/%Y') }}</td>
+            <td>{{ c.semana or '—' }}</td>
+            <td>{{ c.cobrador_nombre }}</td>
+            <td>{{ "%.0f"|format(c.marcador_entrada_anterior) }}</td>
+            <td>{{ "%.0f"|format(c.marcador_entrada_actual) }}</td>
+            <td>{{ "%.0f"|format(c.marcador_salida_anterior) }}</td>
+            <td>{{ "%.0f"|format(c.marcador_salida_actual) }}</td>
+            <td style="color:#059669">{{ "%.2f"|format(c.resultado_entrada) }}</td>
+            <td style="color:#DC2626">{{ "%.2f"|format(c.resultado_salida) }}</td>
+            <td style="font-weight:700;color:{% if c.neto >= 0 %}#059669{% else %}#DC2626{% endif %}">${{ "%.2f"|format(c.neto) }}</td>
+            <td style="font-size:12px;color:#6B7280">{{ c.nota or '—' }}</td>
+            <td><span class="badge badge-{{ 'green' if c.confirmado else 'gray' }}">{{ 'OK' if c.confirmado else 'Pend.' }}</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="empty-state"><i class="ti ti-receipt"></i>Sin cobros registrados</div>{% endif %}
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title"><i class="ti ti-tool"></i>Historial de reparaciones</div>
+        {% if reps %}
+        <table>
+          <thead><tr><th>Fecha</th><th>Técnico</th><th>Tipo</th><th>Piezas</th><th>Notas</th></tr></thead>
+          <tbody>
+          {% for r in reps %}
+          <tr>
+            <td>{{ r.fecha.strftime('%d/%m/%Y') }}</td>
+            <td>{{ r.tecnico }}</td>
+            <td><span class="badge badge-blue">{{ r.tipo }}</span></td>
+            <td style="font-size:12px">{{ r.piezas | replace('["','') | replace('"]','') | replace('","',' · ') }}</td>
+            <td style="font-size:12px;color:#6B7280">{{ r.nota or '—' }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="empty-state"><i class="ti ti-tool"></i>Sin reparaciones</div>{% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-map-pin"></i>Historial de ubicaciones</div>
+        {% if ubicaciones %}
+        <table>
+          <thead><tr><th>Fecha</th><th>Zona anterior</th><th>Punto anterior</th><th>Zona nueva</th><th>Punto nuevo</th><th>Motivo</th><th>Por</th></tr></thead>
+          <tbody>
+          {% for u in ubicaciones %}
+          <tr>
+            <td>{{ u.fecha.strftime('%d/%m/%Y') }}</td>
+            <td>{{ u.zona_anterior or '—' }}</td>
+            <td>{{ u.punto_anterior or '—' }}</td>
+            <td><strong>{{ u.zona_nueva or '—' }}</strong></td>
+            <td><strong>{{ u.punto_nuevo or '—' }}</strong></td>
+            <td style="font-size:12px;color:#6B7280">{{ u.motivo or '—' }}</td>
+            <td style="font-size:12px">{{ u.registrado_por }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="empty-state"><i class="ti ti-map-pin"></i>Sin movimientos de ubicación</div>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

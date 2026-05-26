@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Reparaciones{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-tool" style="margin-right:6px"></i>Reparaciones</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openModal('modalRep')"><i class="ti ti-plus"></i>Registrar reparación</button>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Serie</th><th>Fecha</th><th>Técnico</th><th>Tipo</th><th>Piezas</th><th>Notas</th></tr></thead>
+          <tbody>
+          {% for r in reparaciones %}
+          <tr>
+            <td><strong>{{ r.serie }}</strong></td>
+            <td>{{ r.fecha.strftime('%d/%m/%Y') }}</td>
+            <td>{{ r.tecnico }}</td>
+            <td><span class="badge badge-blue">{{ r.tipo }}</span></td>
+            <td style="font-size:12px">{{ r.piezas | replace('["','') | replace('"]','') | replace('","',' · ') }}</td>
+            <td style="max-width:150px;font-size:12px;color:#6B7280">{{ r.nota or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="empty-state"><i class="ti ti-tool"></i>Sin reparaciones registradas</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA REPARACIÓN -->
+<div class="modal-overlay" id="modalRep">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title"><i class="ti ti-tool" style="margin-right:6px;color:#0A7C5C"></i>Registrar reparación</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>N° de serie *</label>
+        <select id="r-serie">
+          <option value="">Seleccionar máquina</option>
+          {% for m in maquinas %}<option value="{{ m.serie }}">{{ m.serie }} — {{ m.nombre_punto or m.zona }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group"><label>Fecha</label><input type="date" id="r-fecha"></div>
+      <div class="form-group"><label>Técnico</label><input type="text" id="r-tecnico" placeholder="Nombre del técnico"></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="r-tipo">
+          <option value="Taller ECO">Taller ECO</option>
+          <option value="En punto">En punto</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:1rem">
+      <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px">Piezas reemplazadas</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        {% for pieza in ['Teclado','Fichero','Fuente','Tarjeta 8/1','Llavin','Tarjeta','Cableado','Motor','Pista','Cono','Chips','Leds','Acrílico','Cajón','Pintura'] %}
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:#F9FAFB;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid #E5E7EB">
+          <input type="checkbox" class="pieza-check" value="{{ pieza }}" style="width:12px;height:12px"> {{ pieza }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="form-group"><label>Notas de reparación</label><textarea id="r-nota" placeholder="Detalle del fallo, causa, observaciones..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalRep')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarRep()"><i class="ti ti-check"></i>Guardar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('r-fecha').value = new Date().toISOString().split('T')[0];
+async function guardarRep() {
+  const serie = document.getElementById('r-serie').value;
+  if (!serie) { toast('Seleccioná una máquina', 'error'); return; }
+  const piezas = [...document.querySelectorAll('.pieza-check:checked')].map(i => i.value);
+  const r = await api('/reparaciones/nueva', 'POST', {
+    serie, fecha: document.getElementById('r-fecha').value,
+    tecnico: document.getElementById('r-tecnico').value,
+    tipo: document.getElementById('r-tipo').value,
+    piezas, nota: document.getElementById('r-nota').value
+  });
+  if (r.ok) { toast('Reparación registrada'); setTimeout(() => location.reload(), 1000); }
+  else toast(r.error || 'Error', 'error');
+}
+</script>
+{% endblock %}

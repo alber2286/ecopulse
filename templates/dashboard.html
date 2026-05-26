@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-layout-dashboard" style="margin-right:6px"></i>Dashboard</div>
+      <div class="topbar-actions">
+        <span style="font-size:12px;color:#6B7280">{{ now.strftime('%A %d/%m/%Y') if now else '' }}</span>
+      </div>
+    </div>
+    <div class="page-content">
+
+      <!-- MÉTRICAS LED -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label"><i class="ti ti-device-gamepad-2"></i>Total máquinas</div>
+          <div class="metric-value">{{ total }}</div>
+          <div class="metric-sub">activas en sistema</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><span class="led led-verde"></span>Estado OK</div>
+          <div class="metric-value" style="color:#059669">{{ verdes }}</div>
+          <div class="metric-sub">funcionando bien</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><span class="led led-amarillo"></span>Atención</div>
+          <div class="metric-value" style="color:#D97706">{{ amarillas }}</div>
+          <div class="metric-sub">requieren seguimiento</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><span class="led led-rojo"></span>Urgente</div>
+          <div class="metric-value" style="color:#DC2626">{{ rojas }}</div>
+          <div class="metric-sub">acción inmediata</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><i class="ti ti-trending-up"></i>Neto total</div>
+          <div class="metric-value" style="color:#0A7C5C">${{ "%.0f"|format(cobros|sum(attribute='neto')) }}</div>
+          <div class="metric-sub">todos los cobros</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+
+        <!-- ALERTAS -->
+        <div class="card">
+          <div class="card-title"><span class="led led-rojo"></span>Máquinas con alerta</div>
+          {% if maquinas_alerta %}
+          <table>
+            <thead><tr><th>Serie</th><th>Punto</th><th>Estado</th></tr></thead>
+            <tbody>
+            {% for m in maquinas_alerta %}
+            <tr>
+              <td><strong>{{ m.serie }}</strong></td>
+              <td>{{ m.nombre_punto or m.zona or '—' }}</td>
+              <td>
+                <span class="led led-{{ m.led_color() }}"></span>
+                <span class="badge badge-{{ 'red' if m.led_color()=='rojo' else 'yellow' }}" style="margin-left:4px">
+                  {{ m.estado_label() }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="empty-state"><i class="ti ti-circle-check" style="color:#059669"></i>Todas las máquinas en estado OK</div>
+          {% endif %}
+        </div>
+
+        <!-- RENDIMIENTO POR ZONA -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-map-pin"></i>Rendimiento por zona</div>
+          {% if zonas %}
+            {% for zona, datos in zonas.items()|sort(attribute='1.neto', reverse=True) %}
+            <div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:12px;font-weight:500;color:#374151">{{ zona }}</span>
+                <span style="font-size:12px;font-weight:600;color:{% if datos.neto >= 0 %}#059669{% else %}#DC2626{% endif %}">${{ "%.0f"|format(datos.neto) }}</span>
+              </div>
+              <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:{{ [datos.neto / (zonas.values()|map(attribute='neto')|max or 1) * 100, 0]|max }}%;background:{% if datos.neto >= 0 %}#0A7C5C{% else %}#DC2626{% endif %};border-radius:3px"></div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="empty-state"><i class="ti ti-chart-bar"></i>Sin cobros registrados aún</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ÚLTIMOS COBROS -->
+      <div class="card">
+        <div class="card-title"><i class="ti ti-clock"></i>Últimos cobros registrados
+          <a href="/cobros" class="btn btn-sm" style="margin-left:auto">Ver todos</a>
+        </div>
+        {% if cobros %}
+        <table>
+          <thead><tr><th>Serie</th><th>Punto</th><th>Zona</th><th>Fecha</th><th>Cobrador</th><th>Neto G</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for c in cobros %}
+          <tr>
+            <td><strong>{{ c.serie }}</strong></td>
+            <td>{{ c.nombre_punto or '—' }}</td>
+            <td>{{ c.zona }}</td>
+            <td>{{ c.fecha.strftime('%d/%m/%Y') }}</td>
+            <td>{{ c.cobrador_nombre }}</td>
+            <td style="font-weight:600;color:{% if c.neto >= 0 %}#059669{% else %}#DC2626{% endif %}">${{ "%.2f"|format(c.neto) }}</td>
+            <td><span class="badge badge-{{ 'green' if c.confirmado else 'gray' }}">{{ 'Confirmado' if c.confirmado else 'Pendiente' }}</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><i class="ti ti-receipt"></i>Sin cobros registrados</div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

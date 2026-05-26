@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Exportar{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-download" style="margin-right:6px"></i>Exportar datos</div>
+    </div>
+    <div class="page-content">
+      <div class="card" style="max-width:500px">
+        <div class="card-title"><i class="ti ti-filter"></i>Filtros de exportación</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Desde</label><input type="date" id="ex-desde"></div>
+          <div class="form-group"><label>Hasta</label><input type="date" id="ex-hasta"></div>
+          <div class="form-group"><label>Zona</label>
+            <select id="ex-zona">
+              <option value="">Todas las zonas</option>
+              <option>San José Centro</option><option>Alajuela</option><option>Heredia</option>
+              <option>Cartago</option><option>Limón</option><option>Guanacaste</option><option>Puntarenas</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:1rem">
+          <button class="btn btn-primary" onclick="exportar()"><i class="ti ti-download"></i>Exportar CSV</button>
+          <button class="btn" onclick="backup()"><i class="ti ti-database"></i>Backup completo</button>
+        </div>
+        <div id="resultado" style="margin-top:1rem"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+async function exportar() {
+  const desde = document.getElementById('ex-desde').value;
+  const hasta = document.getElementById('ex-hasta').value;
+  const zona = document.getElementById('ex-zona').value;
+  let url = `/exportar?desde=${desde}&hasta=${hasta}&zona=${zona}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if (data.ok) {
+    document.getElementById('resultado').innerHTML = `<div class="alert alert-success"><i class="ti ti-check"></i> ${data.registros} registros encontrados. Próximamente descarga en Excel.</div>`;
+  }
+}
+function backup() { toast('Backup — disponible en próxima versión'); }
+</script>
+{% endblock %}

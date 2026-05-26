@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Cobros{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-calculator" style="margin-right:6px"></i>Registro de cobros</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openModal('modalCobro')"><i class="ti ti-plus"></i>Nueva lectura</button>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead>
+            <tr><th>Serie</th><th>Punto</th><th>Zona</th><th>Semana</th><th>Cobrador</th><th>E (entrada)</th><th>F (salida)</th><th>Neto G</th><th>Nota</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+          {% for c in cobros %}
+          <tr>
+            <td><strong>{{ c.serie }}</strong></td>
+            <td>{{ c.nombre_punto or '—' }}</td>
+            <td>{{ c.zona }}</td>
+            <td>{{ c.semana or c.fecha.strftime('%d/%m/%Y') }}</td>
+            <td>{{ c.cobrador_nombre }}</td>
+            <td style="color:#059669">{{ "%.2f"|format(c.resultado_entrada) }}</td>
+            <td style="color:#DC2626">{{ "%.2f"|format(c.resultado_salida) }}</td>
+            <td style="font-weight:700;color:{% if c.neto >= 0 %}#059669{% else %}#DC2626{% endif %}">${{ "%.2f"|format(c.neto) }}</td>
+            <td style="max-width:120px;font-size:12px;color:#6B7280">{{ c.nota or '—' }}</td>
+            <td><span class="badge badge-{{ 'green' if c.confirmado else 'gray' }}">{{ 'Confirmado' if c.confirmado else 'Pendiente' }}</span></td>
+            <td>
+              {% if not c.confirmado %}
+                {% if current_user.tiene_permiso('confirmar_cobro') or current_user.tiene_permiso('todo') %}
+                <button class="btn btn-sm" onclick="confirmarCobro({{ c.id }})"><i class="ti ti-check"></i></button>
+                {% endif %}
+                {% if current_user.tiene_permiso('editar_maquina') or current_user.tiene_permiso('todo') %}
+                <button class="btn btn-sm" onclick="editarCobro({{ c.id }},{{ c.marcador_entrada_actual }},{{ c.marcador_salida_actual }},'{{ c.nota }}')"><i class="ti ti-edit"></i></button>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="11" class="empty-state"><i class="ti ti-receipt"></i>Sin cobros registrados</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO COBRO -->
+<div class="modal-overlay" id="modalCobro">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-title"><i class="ti ti-calculator" style="margin-right:6px;color:#0A7C5C"></i>Nueva lectura semanal</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>N° de serie *</label>
+        <select id="c-serie" onchange="cargarMarcadores(this.value)">
+          <option value="">Seleccionar máquina</option>
+          {% for m in maquinas %}
+          <option value="{{ m.serie }}" data-entrada="{{ m.marcador_entrada }}" data-salida="{{ m.marcador_salida }}">
+            {{ m.serie }} — {{ m.nombre_punto or m.zona }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Semana</label>
+        <input type="date" id="c-semana">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+      <div style="background:#F0FDF4;border-radius:10px;padding:12px;border:1px solid #A7F3D0">
+        <div style="font-size:12px;font-weight:600;color:#065F46;margin-bottom:8px"><i class="ti ti-arrow-up-circle"></i> Marcador ENTRADA</div>
+        <div class="form-group" style="margin-bottom:8px"><label>Anterior (A) — sistema</label><input type="number" id="c-a" readonly style="background:#E6F7F2;color:#065F46;font-weight:600"></div>
+        <div class="form-group"><label>Actual (B) — cobrador</label><input type="number" id="c-b" placeholder="Ingresá el marcador actual" oninput="calcular()"></div>
+      </div>
+      <div style="background:#FFF5F5;border-radius:10px;padding:12px;border:1px solid #FECACA">
+        <div style="font-size:12px;font-weight:600;color:#991B1B;margin-bottom:8px"><i class="ti ti-arrow-down-circle"></i> Marcador SALIDA</div>
+        <div class="form-group" style="margin-bottom:8px"><label>Anterior (C) — sistema</label><input type="number" id="c-c" readonly style="background:#FEE2E2;color:#991B1B;font-weight:600"></div>
+        <div class="form-group"><label>Actual (D) — cobrador</label><input type="number" id="c-d" placeholder="Ingresá el marcador actual" oninput="calcular()"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem">
+      <div style="background:#F9FAFB;border-radius:8px;padding:10px;text-align:center;border:1px solid #E5E7EB">
+        <div style="font-size:11px;color:#6B7280">Entrada E (B-A)</div>
+        <div style="font-size:18px;font-weight:700;color:#059669" id="r-e">—</div>
+      </div>
+      <div style="background:#F9FAFB;border-radius:8px;padding:10px;text-align:center;border:1px solid #E5E7EB">
+        <div style="font-size:11px;color:#6B7280">Salida F (D-C)</div>
+        <div style="font-size:18px;font-weight:700;color:#DC2626" id="r-f">—</div>
+      </div>
+      <div style="background:#F9FAFB;border-radius:8px;padding:10px;text-align:center;border:1px solid #E5E7EB">
+        <div style="font-size:11px;color:#6B7280">Neto G (E-F)</div>
+        <div style="font-size:18px;font-weight:700" id="r-g">—</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Nota del cobro</label>
+      <textarea id="c-nota" placeholder="Observaciones, estado de la máquina, incidencias..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalCobro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCobro()"><i class="ti ti-check"></i>Guardar lectura</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR COBRO -->
+<div class="modal-overlay" id="modalEditarCobro">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-edit" style="margin-right:6px;color:#0A7C5C"></i>Editar cobro</div>
+    <input type="hidden" id="ec-id">
+    <div class="form-grid">
+      <div class="form-group"><label>Marcador entrada actual (B)</label><input type="number" id="ec-b"></div>
+      <div class="form-group"><label>Marcador salida actual (D)</label><input type="number" id="ec-d"></div>
+      <div class="form-group full"><label>Nota</label><textarea id="ec-nota"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalEditarCobro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionCobro()"><i class="ti ti-check"></i>Guardar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('c-semana').value = new Date().toISOString().split('T')[0];
+
+function cargarMarcadores(serie) {
+  const opt = document.querySelector(`#c-serie option[value="${serie}"]`);
+  if (opt) {
+    document.getElementById('c-a').value = opt.dataset.entrada || 0;
+    document.getElementById('c-c').value = opt.dataset.salida || 0;
+  }
+  calcular();
+}
+
+function calcular() {
+  const A = parseFloat(document.getElementById('c-a').value) || 0;
+  const B = parseFloat(document.getElementById('c-b').value) || 0;
+  const C = parseFloat(document.getElementById('c-c').value) || 0;
+  const D = parseFloat(document.getElementById('c-d').value) || 0;
+  const E = B - A, F = D - C, G = E - F;
+  document.getElementById('r-e').textContent = E.toFixed(2);
+  document.getElementById('r-f').textContent = F.toFixed(2);
+  const rg = document.getElementById('r-g');
+  rg.textContent = G.toFixed(2);
+  rg.style.color = G >= 0 ? '#059669' : '#DC2626';
+}
+
+async function guardarCobro() {
+  const serie = document.getElementById('c-serie').value;
+  const B = document.getElementById('c-b').value;
+  const D = document.getElementById('c-d').value;
+  if (!serie || !B || !D) { toast('Completá todos los campos requeridos', 'error'); return; }
+  const r = await api('/cobros/nuevo', 'POST', {
+    serie, semana: document.getElementById('c-semana').value,
+    marcador_entrada_actual: B, marcador_salida_actual: D,
+    nota: document.getElementById('c-nota').value
+  });
+  if (r.ok) { toast(`Cobro guardado — Neto: $${r.neto.toFixed(2)}`); setTimeout(() => location.reload(), 1200); }
+  else toast(r.error || 'Error', 'error');
+}
+
+async function confirmarCobro(id) {
+  const r = await api(`/cobros/${id}/confirmar`, 'POST');
+  if (r.ok) { toast('Cobro confirmado'); setTimeout(() => location.reload(), 800); }
+  else toast(r.error || 'Error', 'error');
+}
+
+function editarCobro(id, b, d, nota) {
+  document.getElementById('ec-id').value = id;
+  document.getElementById('ec-b').value = b;
+  document.getElementById('ec-d').value = d;
+  document.getElementById('ec-nota').value = nota;
+  openModal('modalEditarCobro');
+}
+
+async function guardarEdicionCobro() {
+  const id = document.getElementById('ec-id').value;
+  const r = await api(`/cobros/${id}/editar`, 'POST', {
+    marcador_entrada_actual: document.getElementById('ec-b').value,
+    marcador_salida_actual: document.getElementById('ec-d').value,
+    nota: document.getElementById('ec-nota').value
+  });
+  if (r.ok) { toast('Cobro actualizado'); setTimeout(() => location.reload(), 800); }
+  else toast(r.error || 'Error', 'error');
+}
+</script>
+{% endblock %}

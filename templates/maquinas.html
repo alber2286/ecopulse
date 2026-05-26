@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Máquinas{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-device-gamepad-2" style="margin-right:6px"></i>Máquinas</div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openModal('modalNuevaMaquina')"><i class="ti ti-plus"></i>Nueva máquina</button>
+      </div>
+    </div>
+    <div class="page-content">
+
+      <!-- FILTROS LED -->
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+        <button class="btn btn-sm active-filter" onclick="filtrar('todas',this)">Todas ({{ maquinas|length }})</button>
+        <button class="btn btn-sm" onclick="filtrar('verde',this)"><span class="led led-verde"></span>OK ({{ maquinas|selectattr('led','eq','verde')|list|length }})</button>
+        <button class="btn btn-sm" onclick="filtrar('amarillo',this)"><span class="led led-amarillo"></span>Atención ({{ maquinas|selectattr('led','eq','amarillo')|list|length }})</button>
+        <button class="btn btn-sm" onclick="filtrar('rojo',this)"><span class="led led-rojo"></span>Urgente ({{ maquinas|selectattr('led','eq','rojo')|list|length }})</button>
+        <input type="text" id="buscador" placeholder="Buscar por serie o punto..." style="padding:6px 12px;border:1px solid #E5E7EB;border-radius:8px;font-size:13px;margin-left:auto;width:240px" oninput="buscar(this.value)">
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <table id="tablaMaquinas">
+          <thead>
+            <tr>
+              <th>LED</th><th>Serie</th><th>Modelo</th><th>Zona</th><th>Punto</th>
+              <th>Estado</th><th>M. Entrada</th><th>M. Salida</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for m in maquinas %}
+          <tr data-led="{{ m.led_color() }}" data-serie="{{ m.serie }}" data-punto="{{ m.nombre_punto }}">
+            <td><span class="led led-{{ m.led_color() }}"></span></td>
+            <td><strong>{{ m.serie }}</strong></td>
+            <td>{{ m.modelo or '—' }}</td>
+            <td>{{ m.zona or '—' }}</td>
+            <td>{{ m.nombre_punto or '—' }}</td>
+            <td>
+              <span class="badge badge-{{ 'green' if m.led_color()=='verde' else 'yellow' if m.led_color()=='amarillo' else 'red' }}">
+                {{ m.estado_label() }}
+              </span>
+            </td>
+            <td>{{ "%.0f"|format(m.marcador_entrada) }}</td>
+            <td>{{ "%.0f"|format(m.marcador_salida) }}</td>
+            <td>
+              <div style="display:flex;gap:4px">
+                <a href="/maquinas/{{ m.id }}/historial" class="btn btn-sm" title="Historial"><i class="ti ti-history"></i></a>
+                {% if current_user.tiene_permiso('editar_maquina') or current_user.tiene_permiso('todo') %}
+                <button class="btn btn-sm" onclick="editarMaquina({{ m.id }},'{{ m.serie }}','{{ m.modelo }}','{{ m.zona }}','{{ m.nombre_punto }}','{{ m.estado }}',{{ m.marcador_entrada }},{{ m.marcador_salida }},'{{ m.notas }}')" title="Editar"><i class="ti ti-edit"></i></button>
+                {% endif %}
+                {% if current_user.tiene_permiso('cambiar_estado') or current_user.tiene_permiso('todo') %}
+                <button class="btn btn-sm" onclick="cambiarEstado({{ m.id }},'{{ m.estado }}')" title="Cambiar estado"><i class="ti ti-refresh"></i></button>
+                {% endif %}
+                {% if current_user.tiene_permiso('borrar_maquina_con_clave') or current_user.tiene_permiso('todo') %}
+                <button class="btn btn-sm btn-danger" onclick="borrarMaquina({{ m.id }},'{{ m.serie }}')" title="Eliminar"><i class="ti ti-trash"></i></button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="empty-state"><i class="ti ti-device-gamepad-2"></i>Sin máquinas registradas</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA MÁQUINA -->
+<div class="modal-overlay" id="modalNuevaMaquina">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-plus" style="margin-right:6px;color:#0A7C5C"></i>Registrar nueva máquina</div>
+    <div class="form-grid">
+      <div class="form-group"><label>N° de serie *</label><input type="text" id="n-serie" placeholder="MAQ-001"></div>
+      <div class="form-group"><label>Modelo</label><input type="text" id="n-modelo" placeholder="Slot Pro X"></div>
+      <div class="form-group"><label>Zona</label>
+        <select id="n-zona">
+          <option value="">Seleccionar zona</option>
+          <option>San José Centro</option><option>Alajuela</option><option>Heredia</option>
+          <option>Cartago</option><option>Limón</option><option>Guanacaste</option><option>Puntarenas</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Nombre del punto</label><input type="text" id="n-punto" placeholder="Pulpería Teresita"></div>
+      <div class="form-group"><label>Marcador entrada inicial</label><input type="number" id="n-entrada" placeholder="0" value="0"></div>
+      <div class="form-group"><label>Marcador salida inicial</label><input type="number" id="n-salida" placeholder="0" value="0"></div>
+      <div class="form-group full"><label>Notas</label><textarea id="n-notas" placeholder="Observaciones..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalNuevaMaquina')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMaquina()"><i class="ti ti-check"></i>Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-edit" style="margin-right:6px;color:#0A7C5C"></i>Editar máquina</div>
+    <input type="hidden" id="e-id">
+    <div class="form-grid">
+      <div class="form-group"><label>N° de serie</label><input type="text" id="e-serie"></div>
+      <div class="form-group"><label>Modelo</label><input type="text" id="e-modelo"></div>
+      <div class="form-group"><label>Zona</label>
+        <select id="e-zona">
+          <option value="">Seleccionar</option>
+          <option>San José Centro</option><option>Alajuela</option><option>Heredia</option>
+          <option>Cartago</option><option>Limón</option><option>Guanacaste</option><option>Puntarenas</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Nombre del punto</label><input type="text" id="e-punto"></div>
+      <div class="form-group"><label>Marcador entrada</label><input type="number" id="e-entrada"></div>
+      <div class="form-group"><label>Marcador salida</label><input type="number" id="e-salida"></div>
+      <div class="form-group"><label>Motivo del cambio</label><input type="text" id="e-motivo" placeholder="Ej: Traslado a nuevo punto"></div>
+      <div class="form-group full"><label>Notas</label><textarea id="e-notas"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalEditar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicion()"><i class="ti ti-check"></i>Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESTADO -->
+<div class="modal-overlay" id="modalEstado">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-refresh" style="margin-right:6px;color:#0A7C5C"></i>Cambiar estado</div>
+    <input type="hidden" id="est-id">
+    <div class="form-group">
+      <label>Nuevo estado</label>
+      <select id="est-estado">
+        <option value="ok">✅ OK — Funcionando bien</option>
+        <option value="necesita_cobro">🟡 Necesita cobro</option>
+        <option value="reparando">🟡 Reparando en progreso</option>
+        <option value="danada">🔴 Dañada</option>
+        <option value="necesita_retirar">🔴 Necesita retirar</option>
+        <option value="caso_muni">🔴 Caso Muni</option>
+        <option value="robada">🔴 Robada</option>
+        <option value="extraviada">🔴 Extraviada</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalEstado')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarEstado()"><i class="ti ti-check"></i>Actualizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BORRAR -->
+<div class="modal-overlay" id="modalBorrar">
+  <div class="modal">
+    <div class="modal-title" style="color:#DC2626"><i class="ti ti-trash" style="margin-right:6px"></i>Eliminar máquina</div>
+    <input type="hidden" id="b-id">
+    <p style="font-size:13px;color:#6B7280;margin-bottom:1rem">Esta acción requiere la clave del administrador y quedará registrada en auditoría.</p>
+    <div class="form-group"><label>Razón de eliminación</label><input type="text" id="b-razon" placeholder="Motivo..."></div>
+    <div class="form-group"><label>Clave del Admin</label><input type="password" id="b-clave" placeholder="••••••••"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modalBorrar')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmarBorrar()"><i class="ti ti-trash"></i>Eliminar</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function filtrar(tipo, btn) {
+  document.querySelectorAll('.active-filter').forEach(b => b.classList.remove('active-filter'));
+  btn.classList.add('active-filter');
+  document.querySelectorAll('#tablaMaquinas tbody tr[data-led]').forEach(tr => {
+    tr.style.display = (tipo === 'todas' || tr.dataset.led === tipo) ? '' : 'none';
+  });
+}
+function buscar(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#tablaMaquinas tbody tr[data-led]').forEach(tr => {
+    const match = tr.dataset.serie.toLowerCase().includes(q) || tr.dataset.punto.toLowerCase().includes(q);
+    tr.style.display = match ? '' : 'none';
+  });
+}
+async function guardarMaquina() {
+  const serie = document.getElementById('n-serie').value.trim();
+  if (!serie) { toast('Ingresá el número de serie', 'error'); return; }
+  const r = await api('/maquinas/nueva', 'POST', {
+    serie, modelo: document.getElementById('n-modelo').value,
+    zona: document.getElementById('n-zona').value,
+    nombre_punto: document.getElementById('n-punto').value,
+    marcador_entrada: document.getElementById('n-entrada').value,
+    marcador_salida: document.getElementById('n-salida').value,
+    notas: document.getElementById('n-notas').value
+  });
+  if (r.ok) { toast('Máquina registrada'); setTimeout(() => location.reload(), 1000); }
+  else toast(r.error || 'Error', 'error');
+}
+function editarMaquina(id, serie, modelo, zona, punto, estado, entrada, salida, notas) {
+  document.getElementById('e-id').value = id;
+  document.getElementById('e-serie').value = serie;
+  document.getElementById('e-modelo').value = modelo;
+  document.getElementById('e-zona').value = zona;
+  document.getElementById('e-punto').value = punto;
+  document.getElementById('e-entrada').value = entrada;
+  document.getElementById('e-salida').value = salida;
+  document.getElementById('e-notas').value = notas;
+  openModal('modalEditar');
+}
+async function guardarEdicion() {
+  const id = document.getElementById('e-id').value;
+  const r = await api(`/maquinas/${id}/editar`, 'POST', {
+    serie: document.getElementById('e-serie').value,
+    modelo: document.getElementById('e-modelo').value,
+    zona: document.getElementById('e-zona').value,
+    nombre_punto: document.getElementById('e-punto').value,
+    marcador_entrada: document.getElementById('e-entrada').value,
+    marcador_salida: document.getElementById('e-salida').value,
+    motivo_cambio: document.getElementById('e-motivo').value,
+    notas: document.getElementById('e-notas').value
+  });
+  if (r.ok) { toast('Máquina actualizada'); setTimeout(() => location.reload(), 1000); }
+  else toast(r.error || 'Error', 'error');
+}
+function cambiarEstado(id, estado) {
+  document.getElementById('est-id').value = id;
+  document.getElementById('est-estado').value = estado;
+  openModal('modalEstado');
+}
+async function confirmarEstado() {
+  const id = document.getElementById('est-id').value;
+  const r = await api(`/maquinas/${id}/estado`, 'POST', { estado: document.getElementById('est-estado').value });
+  if (r.ok) { toast('Estado actualizado'); setTimeout(() => location.reload(), 1000); }
+  else toast(r.error || 'Error', 'error');
+}
+function borrarMaquina(id, serie) {
+  document.getElementById('b-id').value = id;
+  openModal('modalBorrar');
+}
+async function confirmarBorrar() {
+  const id = document.getElementById('b-id').value;
+  const r = await api(`/maquinas/${id}/borrar`, 'POST', {
+    clave_admin: document.getElementById('b-clave').value,
+    razon: document.getElementById('b-razon').value
+  });
+  if (r.ok) { toast('Máquina eliminada'); setTimeout(() => location.reload(), 1000); }
+  else toast(r.error || 'Error', 'error');
+}
+</script>
+{% endblock %}

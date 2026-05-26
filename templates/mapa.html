@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Mapa{% endblock %}
+{% block body %}
+<div class="layout">
+  {% include "sidebar.html" %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title"><i class="ti ti-map-2" style="margin-right:6px"></i>Mapa de máquinas</div>
+    </div>
+    <div class="page-content">
+      <div class="card" style="text-align:center;padding:3rem">
+        <i class="ti ti-map-2" style="font-size:48px;color:#0A7C5C;display:block;margin-bottom:1rem"></i>
+        <h3 style="margin-bottom:8px">Integración Google Maps</h3>
+        <p style="color:#6B7280;font-size:13px;margin-bottom:1.5rem">Próxima sesión — Se requiere API Key de Google Maps</p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <span class="badge badge-green"><i class="ti ti-map-pin"></i> Capa 1 — Ubicaciones</span>
+          <span class="badge badge-blue"><i class="ti ti-chart-bar"></i> Capa 2 — Financiero</span>
+          <span class="badge badge-yellow"><i class="ti ti-alert-triangle"></i> Capa 3 — A reparar</span>
+        </div>
+        <div style="margin-top:1.5rem;background:#F9FAFB;border-radius:10px;padding:1rem">
+          <p style="font-size:13px;font-weight:600;margin-bottom:8px">Máquinas activas ({{ maquinas|length }})</p>
+          {% for m in maquinas %}
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F3F4F6;font-size:13px">
+            <span class="led led-{{ m.led_color() }}"></span>
+            <strong>{{ m.serie }}</strong> — {{ m.nombre_punto or '—' }} ({{ m.zona or '—' }})
+          </div>
+          {% else %}
+          <p style="color:#9CA3AF;font-size:13px">Sin máquinas activas</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
