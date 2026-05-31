@@ -416,6 +416,60 @@ def init_db():
             db.session.commit()
             print('Admin creado: admin@ecopulse.com / admin123')
 
+
+
+@app.route('/cobrador')
+@login_required
+def cobrador():
+    if current_user.rol == 'cobrador':
+        maquinas = Maquina.query.filter_by(activa=True, estado='ok').order_by(Maquina.serie).all()
+    else:
+        maquinas = Maquina.query.filter_by(activa=True).order_by(Maquina.serie).all()
+    return render_template('cobrador.html', maquinas=maquinas)
+
+
+@app.route('/api/leer-marcador', methods=['POST'])
+@login_required
+def leer_marcador():
+    try:
+        import anthropic
+        import json as json_lib
+        data = request.json
+        imagen_base64 = data.get('imagen')
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            return jsonify({'entrada': None, 'salida': None, 'error': 'Sin API key'})
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt_text = 'Analiza esta imagen de contadores de maquina slot. Lee los numeros. Si hay dos contadores: izquierdo es entrada, derecho es salida. Responde SOLO con JSON valido sin texto adicional, formato: {"entrada": NUMERO, "salida": NUMERO}. Si no puedes leer alguno usa null.'
+        message = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=100,
+            messages=[{
+                'role': 'user',
+                'content': [
+                    {
+                        'type': 'image',
+                        'source': {
+                            'type': 'base64',
+                            'media_type': 'image/jpeg',
+                            'data': imagen_base64
+                        }
+                    },
+                    {
+                        'type': 'text',
+                        'text': prompt_text
+                    }
+                ]
+            }]
+        )
+        text = message.content[0].text.strip()
+        text = text.replace('```json', '').replace('```', '').strip()
+        result = json_lib.loads(text)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'entrada': None, 'salida': None, 'error': str(e)})
+
+
 if __name__ == '__main__':
     init_db()
     print('EcoPulse by MAGO Solutions arrancando...')

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>EcoPulse — Cobrador</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --eco: #0A7C5C; --eco-dark: #065C43; --eco-light: #E6F7F2;
+      --gray-50: #F9FAFB; --gray-100: #F3F4F6; --gray-200: #E5E7EB;
+      --gray-500: #6B7280; --gray-700: #374151; --gray-800: #1F2937;
+      --red: #DC2626; --green: #059669;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-50); min-height: 100vh; }
+
+    /* HEADER */
+    .header { background: var(--eco); padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-icon { width: 32px; height: 32px; background: rgba(255,255,255,.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+    .header-title { color: white; font-size: 16px; font-weight: 600; }
+    .header-sub { color: rgba(255,255,255,.7); font-size: 11px; }
+    .header-user { color: rgba(255,255,255,.8); font-size: 12px; text-align: right; }
+
+    /* CONTENT */
+    .content { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+    /* CARDS */
+    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--gray-200); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+    /* FORM */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--gray-500); margin-bottom: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 12px; font-size: 15px; border: 1.5px solid var(--gray-200); border-radius: 10px; background: white; color: var(--gray-800); font-family: inherit; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--eco); }
+    .form-group input[readonly] { background: var(--gray-50); color: var(--eco); font-weight: 600; }
+
+    /* MARCADORES */
+    .marcadores-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .marcador-box { background: var(--gray-50); border-radius: 10px; padding: 12px; border: 1.5px solid var(--gray-200); }
+    .marcador-box.entrada { border-color: #A7F3D0; background: #F0FDF4; }
+    .marcador-box.salida { border-color: #FECACA; background: #FFF5F5; }
+    .marcador-label { font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+    .marcador-box.entrada .marcador-label { color: #065F46; }
+    .marcador-box.salida .marcador-label { color: #991B1B; }
+    .marcador-anterior { font-size: 11px; color: var(--gray-500); margin-bottom: 6px; }
+    .marcador-anterior span { font-weight: 600; color: var(--gray-700); }
+    .marcador-box input { width: 100%; padding: 8px; font-size: 18px; font-weight: 700; border: 1.5px solid var(--gray-200); border-radius: 8px; text-align: center; }
+    .marcador-box.entrada input { border-color: #A7F3D0; color: #065F46; }
+    .marcador-box.salida input { border-color: #FECACA; color: #991B1B; }
+
+    /* RESULTADOS */
+    .resultados { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .resultado-box { background: var(--gray-50); border-radius: 10px; padding: 10px; text-align: center; border: 1px solid var(--gray-200); }
+    .resultado-label { font-size: 10px; color: var(--gray-500); margin-bottom: 4px; }
+    .resultado-valor { font-size: 16px; font-weight: 700; }
+
+    /* FOTO BUTTON */
+    .btn-foto { width: 100%; padding: 14px; background: var(--eco); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; font-family: inherit; }
+    .btn-foto:active { background: var(--eco-dark); }
+    .btn-manual { width: 100%; padding: 10px; background: white; color: var(--gray-700); border: 1.5px solid var(--gray-200); border-radius: 12px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
+
+    /* BTN GUARDAR */
+    .btn-guardar { width: 100%; padding: 16px; background: var(--eco); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 8px; }
+    .btn-guardar:disabled { background: var(--gray-200); color: var(--gray-500); }
+
+    /* PREVIEW FOTO */
+    .foto-preview { width: 100%; border-radius: 10px; margin-bottom: 10px; display: none; }
+    .foto-preview img { width: 100%; border-radius: 10px; border: 2px solid var(--eco); }
+
+    /* PROCESANDO */
+    .procesando { display: none; background: var(--eco-light); border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 10px; }
+    .procesando-text { font-size: 13px; color: var(--eco); font-weight: 500; margin-top: 6px; }
+    .spinner { width: 24px; height: 24px; border: 3px solid var(--eco-light); border-top-color: var(--eco); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* GANANCIA */
+    .ganancia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ganancia-box { border-radius: 10px; padding: 12px; text-align: center; }
+    .ganancia-eco { background: #F0FDF4; border: 1px solid #A7F3D0; }
+    .ganancia-cliente { background: #EFF6FF; border: 1px solid #BFDBFE; }
+    .ganancia-label { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+    .ganancia-eco .ganancia-label { color: #065F46; }
+    .ganancia-cliente .ganancia-label { color: #1E40AF; }
+    .ganancia-valor { font-size: 20px; font-weight: 700; }
+    .ganancia-eco .ganancia-valor { color: #059669; }
+    .ganancia-cliente .ganancia-valor { color: #1D4ED8; }
+
+    /* MAQUINA SELECTOR */
+    .maquina-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; border: 1.5px solid var(--gray-200); margin-bottom: 8px; cursor: pointer; background: white; }
+    .maquina-item:active { background: var(--eco-light); border-color: var(--eco); }
+    .maquina-led { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .led-verde { background: #10B981; box-shadow: 0 0 6px #10B981; }
+    .led-amarillo { background: #F59E0B; box-shadow: 0 0 6px #F59E0B; }
+    .led-rojo { background: #EF4444; box-shadow: 0 0 6px #EF4444; }
+    .maquina-info { flex: 1; }
+    .maquina-serie { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+    .maquina-punto { font-size: 12px; color: var(--gray-500); }
+
+    /* SCREENS */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .badge-ok { background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+
+    /* DIGITAL PANEL */
+    .digital-panel { display: none; background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    .digital-panel.show { display: block; }
+    .digital-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1F2937; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-icon"><i class="ti ti-bolt"></i></div>
+    <div>
+      <div class="header-title">EcoPulse</div>
+      <div class="header-sub">Panel Cobrador</div>
+    </div>
+  </div>
+  <div class="header-user">
+    {{ current_user.nombre }}<br>
+    <a href="/logout" style="color:rgba(255,255,255,.6);font-size:11px">Salir</a>
+  </div>
+</div>
+
+<!-- SCREEN 1: LISTA DE MÁQUINAS -->
+<div class="screen active" id="screen-lista">
+  <div class="content">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-device-gamepad-2"></i>Mis máquinas asignadas</div>
+      {% if maquinas %}
+        {% for m in maquinas %}
+        <div class="maquina-item" onclick="seleccionarMaquina('{{ m.serie }}', '{{ m.nombre_punto or m.zona }}', {{ m.marcador_entrada }}, {{ m.marcador_salida }}, {{ m.id }})">
+          <div class="maquina-led led-{{ m.led_color() }}"></div>
+          <div class="maquina-info">
+            <div class="maquina-serie">{{ m.serie }}</div>
+            <div class="maquina-punto">{{ m.nombre_punto or m.zona or '—' }}</div>
+          </div>
+          <i class="ti ti-chevron-right" style="color:#9CA3AF"></i>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:2rem;color:#9CA3AF">
+          <i class="ti ti-device-gamepad-2" style="font-size:32px;display:block;margin-bottom:8px"></i>
+          No tenés máquinas asignadas
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: FORMULARIO DE COBRO -->
+<div class="screen" id="screen-cobro">
+  <div class="content">
+
+    <!-- INFO MÁQUINA -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="volverLista()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:20px"><i class="ti ti-arrow-left"></i></button>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#1F2937" id="cobro-serie">—</div>
+          <div style="font-size:12px;color:#6B7280" id="cobro-punto">—</div>
+        </div>
+        <span class="badge-ok" style="margin-left:auto">Activa</span>
+      </div>
+    </div>
+
+    <!-- FOTO IA -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-camera"></i>Leer marcadores con IA</div>
+
+      <div class="foto-preview" id="fotoPreview">
+        <img id="fotoImg" src="" alt="Foto marcador">
+      </div>
+
+      <div class="procesando" id="procesando">
+        <div class="spinner"></div>
+        <div class="procesando-text">IA analizando marcadores...</div>
+      </div>
+
+      <button class="btn-foto" onclick="tomarFoto()">
+        <i class="ti ti-camera"></i> Tomar foto del marcador
+      </button>
+      <input type="file" id="inputFoto" accept="image/*" capture="environment" style="display:none" onchange="procesarFoto(this)">
+
+      <button class="btn-manual" onclick="toggleDigital()">
+        <i class="ti ti-keyboard"></i> Ingresar datos digitales manualmente
+      </button>
+
+      <!-- PANEL DIGITAL -->
+      <div class="digital-panel" id="digitalPanel">
+        <div class="card-title" style="margin-bottom:8px"><i class="ti ti-device-desktop"></i>Marcador digital</div>
+        <div class="digital-grid">
+          <div class="form-group" style="margin:0">
+            <label>Entrada</label>
+            <input type="number" id="dig-entrada" placeholder="0" oninput="actualizarDesdeDigital()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Salida</label>
+            <input type="number" id="dig-salida" placeholder="0" oninput="actualizarDesdeDigital()">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Total</label>
+            <input type="number" id="dig-total" placeholder="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARCADORES -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-calculator"></i>Lectura de marcadores</div>
+      <div class="marcadores-grid">
+        <div class="marcador-box entrada">
+          <div class="marcador-label"><i class="ti ti-arrow-up-circle"></i> ENTRADA</div>
+          <div class="marcador-anterior">Anterior: <span id="val-a">—</span></div>
+          <input type="number" id="val-b" placeholder="Actual" oninput="calcular()">
+        </div>
+        <div class="marcador-box salida">
+          <div class="marcador-label"><i class="ti ti-arrow-down-circle"></i> SALIDA</div>
+          <div class="marcador-anterior">Anterior: <span id="val-c">—</span></div>
+          <input type="number" id="val-d" placeholder="Actual" oninput="calcular()">
+        </div>
+      </div>
+
+      <div class="resultados">
+        <div class="resultado-box">
+          <div class="resultado-label">Entrada E</div>
+          <div class="resultado-valor" id="res-e" style="color:#059669">—</div>
+        </div>
+        <div class="resultado-box">
+          <div class="resultado-label">Salida F</div>
+          <div class="resultado-valor" id="res-f" style="color:#DC2626">—</div>
+        </div>
+        <div class="resultado-box">
+          <div class="resultado-label">Neto G</div>
+          <div class="resultado-valor" id="res-g">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DINERO FÍSICO Y GANANCIA -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-cash"></i>Dinero encontrado</div>
+      <div class="form-group">
+        <label>Dinero físico en la máquina ($)</label>
+        <input type="number" id="dinero-fisico" placeholder="0.00" oninput="calcularGanancia()">
+      </div>
+      <div class="form-group">
+        <label>% para cliente</label>
+        <select id="porcentaje-cliente" onchange="calcularGanancia()">
+          <option value="50">50% cliente / 50% ECO</option>
+          <option value="35">35% cliente / 65% ECO</option>
+        </select>
+      </div>
+      <div class="ganancia-grid">
+        <div class="ganancia-box ganancia-eco">
+          <div class="ganancia-label">ECO recibe</div>
+          <div class="ganancia-valor" id="gan-eco">$0</div>
+        </div>
+        <div class="ganancia-box ganancia-cliente">
+          <div class="ganancia-label">Cliente recibe</div>
+          <div class="ganancia-valor" id="gan-cliente">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTA -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-notes"></i>Nota del cobro</div>
+      <textarea id="cobro-nota" placeholder="Observaciones, estado de la máquina, incidencias..." style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;min-height:80px;font-family:inherit;resize:none"></textarea>
+    </div>
+
+    <button class="btn-guardar" id="btnGuardar" onclick="guardarCobro()">
+      <i class="ti ti-check"></i> Guardar cobro
+    </button>
+
+    <div style="height:30px"></div>
+  </div>
+</div>
+
+<input type="hidden" id="maquina-id">
+<input type="hidden" id="maquina-a">
+<input type="hidden" id="maquina-c">
+<div class="toast" id="toast"></div>
+
+<script>
+let maquinaActual = null;
+
+function seleccionarMaquina(serie, punto, marcEntrada, marcSalida, id) {
+  maquinaActual = { serie, punto, marcEntrada, marcSalida, id };
+  document.getElementById('cobro-serie').textContent = serie;
+  document.getElementById('cobro-punto').textContent = punto;
+  document.getElementById('val-a').textContent = marcEntrada;
+  document.getElementById('val-c').textContent = marcSalida;
+  document.getElementById('maquina-id').value = id;
+  document.getElementById('maquina-a').value = marcEntrada;
+  document.getElementById('maquina-c').value = marcSalida;
+  document.getElementById('val-b').value = '';
+  document.getElementById('val-d').value = '';
+  document.getElementById('res-e').textContent = '—';
+  document.getElementById('res-f').textContent = '—';
+  document.getElementById('res-g').textContent = '—';
+  document.getElementById('dinero-fisico').value = '';
+  document.getElementById('cobro-nota').value = '';
+  document.getElementById('fotoPreview').style.display = 'none';
+  document.getElementById('digitalPanel').classList.remove('show');
+  document.getElementById('screen-lista').classList.remove('active');
+  document.getElementById('screen-cobro').classList.add('active');
+}
+
+function volverLista() {
+  document.getElementById('screen-cobro').classList.remove('active');
+  document.getElementById('screen-lista').classList.add('active');
+}
+
+function tomarFoto() {
+  document.getElementById('inputFoto').click();
+}
+
+async function procesarFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    document.getElementById('fotoImg').src = e.target.result;
+    document.getElementById('fotoPreview').style.display = 'block';
+    document.getElementById('procesando').style.display = 'block';
+    try {
+      const base64 = e.target.result.split(',')[1];
+      const response = await fetch('/api/leer-marcador', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagen: base64 })
+      });
+      const data = await response.json();
+      if (data.entrada !== null) {
+        document.getElementById('val-b').value = data.entrada;
+        showToast('✅ Marcador izquierdo: ' + data.entrada);
+      }
+      if (data.salida !== null) {
+        document.getElementById('val-d').value = data.salida;
+        setTimeout(() => showToast('✅ Marcador derecho: ' + data.salida), 1000);
+      }
+      calcular();
+    } catch(err) {
+      showToast('Error al procesar foto — ingresá manual', 'error');
+    }
+    document.getElementById('procesando').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleDigital() {
+  document.getElementById('digitalPanel').classList.toggle('show');
+}
+
+function actualizarDesdeDigital() {
+  const entrada = document.getElementById('dig-entrada').value;
+  const salida = document.getElementById('dig-salida').value;
+  if (entrada) document.getElementById('val-b').value = entrada;
+  if (salida) document.getElementById('val-d').value = salida;
+  calcular();
+}
+
+function calcular() {
+  const A = parseFloat(document.getElementById('maquina-a').value) || 0;
+  const B = parseFloat(document.getElementById('val-b').value) || 0;
+  const C = parseFloat(document.getElementById('maquina-c').value) || 0;
+  const D = parseFloat(document.getElementById('val-d').value) || 0;
+  const E = B - A, F = D - C, G = E - F;
+  document.getElementById('res-e').textContent = E.toFixed(2);
+  document.getElementById('res-f').textContent = F.toFixed(2);
+  const rg = document.getElementById('res-g');
+  rg.textContent = G.toFixed(2);
+  rg.style.color = G >= 0 ? '#059669' : '#DC2626';
+}
+
+function calcularGanancia() {
+  const dinero = parseFloat(document.getElementById('dinero-fisico').value) || 0;
+  const pct = parseFloat(document.getElementById('porcentaje-cliente').value) || 50;
+  const cliente = dinero * pct / 100;
+  const eco = dinero - cliente;
+  document.getElementById('gan-eco').textContent = '$' + eco.toFixed(2);
+  document.getElementById('gan-cliente').textContent = '$' + cliente.toFixed(2);
+}
+
+async function guardarCobro() {
+  const serie = maquinaActual?.serie;
+  const B = document.getElementById('val-b').value;
+  const D = document.getElementById('val-d').value;
+  if (!serie || !B || !D) { showToast('Completá entrada y salida actuales', 'error'); return; }
+  document.getElementById('btnGuardar').disabled = true;
+  document.getElementById('btnGuardar').textContent = 'Guardando...';
+  const r = await fetch('/cobros/nuevo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      serie,
+      marcador_entrada_actual: B,
+      marcador_salida_actual: D,
+      semana: new Date().toISOString().split('T')[0],
+      nota: document.getElementById('cobro-nota').value,
+      dinero_fisico: document.getElementById('dinero-fisico').value,
+      porcentaje_cliente: document.getElementById('porcentaje-cliente').value
+    })
+  });
+  const data = await r.json();
+  if (data.ok) {
+    showToast('✅ Cobro guardado — Neto: $' + data.neto.toFixed(2));
+    setTimeout(() => volverLista(), 1500);
+  } else {
+    showToast(data.error || 'Error al guardar', 'error');
+    document.getElementById('btnGuardar').disabled = false;
+    document.getElementById('btnGuardar').innerHTML = '<i class="ti ti-check"></i> Guardar cobro';
+  }
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#DC2626' : '#1F2937';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
