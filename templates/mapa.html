@@ -1,35 +1,187 @@
 {% extends "base.html" %}
 {% block title %}Mapa{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  #map { height: calc(100vh - 140px); width: 100%; border-radius: 10px; }
+  .layer-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .layer-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--gray-300); background: white; color: var(--gray-600); transition: all .15s; display: flex; align-items: center; gap: 5px; }
+  .layer-btn.on { color: white; border-color: transparent; }
+  .layer-btn.c1.on { background: #0A7C5C; }
+  .layer-btn.c2.on { background: #1A56DB; }
+  .layer-btn.c3.on { background: #D97706; }
+  .map-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 8px; margin-bottom: 12px; }
+  .map-stat { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 8px 12px; text-align: center; }
+  .map-stat-v { font-size: 20px; font-weight: 700; }
+  .map-stat-l { font-size: 11px; color: var(--gray-500); }
+  .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.15); }
+  .popup-header { font-weight: 700; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .popup-row { font-size: 12px; color: #4B5563; margin-bottom: 3px; display: flex; justify-content: space-between; gap: 12px; }
+  .popup-row strong { color: #111827; }
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="layout">
   {% include "sidebar.html" %}
   <div class="main-content">
     <div class="topbar">
       <div class="page-title"><i class="ti ti-map-2" style="margin-right:6px"></i>Mapa de máquinas</div>
+      <div style="font-size:12px;color:#6B7280">{{ maquinas|length }} máquinas activas</div>
     </div>
     <div class="page-content">
-      <div class="card" style="text-align:center;padding:3rem">
-        <i class="ti ti-map-2" style="font-size:48px;color:#0A7C5C;display:block;margin-bottom:1rem"></i>
-        <h3 style="margin-bottom:8px">Integración Google Maps</h3>
-        <p style="color:#6B7280;font-size:13px;margin-bottom:1.5rem">Próxima sesión — Se requiere API Key de Google Maps</p>
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-          <span class="badge badge-green"><i class="ti ti-map-pin"></i> Capa 1 — Ubicaciones</span>
-          <span class="badge badge-blue"><i class="ti ti-chart-bar"></i> Capa 2 — Financiero</span>
-          <span class="badge badge-yellow"><i class="ti ti-alert-triangle"></i> Capa 3 — A reparar</span>
+
+      <div class="map-stats">
+        <div class="map-stat">
+          <div class="map-stat-v" style="color:#059669">{{ maquinas|selectattr('estado','eq','ok')|list|length }}</div>
+          <div class="map-stat-l"><span class="led led-verde"></span> OK</div>
         </div>
-        <div style="margin-top:1.5rem;background:#F9FAFB;border-radius:10px;padding:1rem">
-          <p style="font-size:13px;font-weight:600;margin-bottom:8px">Máquinas activas ({{ maquinas|length }})</p>
-          {% for m in maquinas %}
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F3F4F6;font-size:13px">
-            <span class="led led-{{ m.led_color() }}"></span>
-            <strong>{{ m.serie }}</strong> — {{ m.nombre_punto or '—' }} ({{ m.zona or '—' }})
-          </div>
-          {% else %}
-          <p style="color:#9CA3AF;font-size:13px">Sin máquinas activas</p>
-          {% endfor %}
+        <div class="map-stat">
+          <div class="map-stat-v" style="color:#D97706">{{ maquinas|selectattr('estado','in',['necesita_cobro','reparando'])|list|length }}</div>
+          <div class="map-stat-l"><span class="led led-amarillo"></span> Atención</div>
+        </div>
+        <div class="map-stat">
+          <div class="map-stat-v" style="color:#DC2626">{{ maquinas|selectattr('estado','in',['danada','necesita_retirar','caso_muni','robada','extraviada'])|list|length }}</div>
+          <div class="map-stat-l"><span class="led led-rojo"></span> Urgente</div>
+        </div>
+        <div class="map-stat">
+          <div class="map-stat-v">{{ maquinas|length }}</div>
+          <div class="map-stat-l">Total activas</div>
         </div>
       </div>
+
+      <div class="layer-controls">
+        <button class="layer-btn c1 on" onclick="toggleLayer('c1',this)"><i class="ti ti-map-pin"></i> Capa 1 — Ubicaciones</button>
+        <button class="layer-btn c2" onclick="toggleLayer('c2',this)"><i class="ti ti-chart-bar"></i> Capa 2 — Financiero</button>
+        <button class="layer-btn c3" onclick="toggleLayer('c3',this)"><i class="ti ti-alert-triangle"></i> Capa 3 — A reparar</button>
+        <button class="layer-btn" onclick="toggleSatelite(this)" style="margin-left:auto"><i class="ti ti-satellite"></i> Vista satélite</button>
+      </div>
+
+      <div id="map"></div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const maquinasData = {{ maquinas_json|safe }};
+
+const map = L.map('map').setView([9.7489, -83.7534], 8);
+
+const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors', maxZoom: 19
+});
+
+const sateliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '© Esri World Imagery', maxZoom: 19
+});
+
+streetLayer.addTo(map);
+let sateliteOn = false;
+
+function toggleSatelite(btn) {
+  sateliteOn = !sateliteOn;
+  if (sateliteOn) {
+    map.removeLayer(streetLayer);
+    sateliteLayer.addTo(map);
+    btn.classList.add('on');
+    btn.style.background = '#374151';
+    btn.style.color = 'white';
+  } else {
+    map.removeLayer(sateliteLayer);
+    streetLayer.addTo(map);
+    btn.classList.remove('on');
+    btn.style.background = '';
+    btn.style.color = '';
+  }
+}
+
+function ledColor(estado) {
+  const rojos = ['danada','necesita_retirar','caso_muni','robada','extraviada'];
+  const amarillos = ['necesita_cobro','reparando'];
+  if (rojos.includes(estado)) return '#EF4444';
+  if (amarillos.includes(estado)) return '#F59E0B';
+  return '#10B981';
+}
+
+function estadoLabel(estado) {
+  const labels = {
+    'ok':'OK','danada':'Dañada','reparando':'Reparando',
+    'necesita_retirar':'Necesita retirar','caso_muni':'Caso Muni',
+    'robada':'Robada','extraviada':'Extraviada','necesita_cobro':'Necesita cobro'
+  };
+  return labels[estado] || estado;
+}
+
+function makeIcon(color, showFinanciero, neto) {
+  let extra = '';
+  if (showFinanciero && neto !== null) {
+    const netoColor = neto >= 0 ? '#059669' : '#DC2626';
+    extra = `<div style="background:white;border-radius:4px;padding:1px 4px;font-size:9px;font-weight:700;color:${netoColor};margin-top:2px;border:1px solid ${netoColor}">$${Math.round(neto)}</div>`;
+  }
+  return L.divIcon({
+    className: '',
+    html: `<div style="display:flex;flex-direction:column;align-items:center">
+      <div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>
+      ${extra}
+    </div>`,
+    iconSize: [14, showFinanciero ? 32 : 14],
+    iconAnchor: [7, 7]
+  });
+}
+
+const layers = { c1: true, c2: false, c3: false };
+let markers = [];
+
+function renderMarkers() {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  maquinasData.forEach(m => {
+    if (!m.lat || !m.lng) return;
+
+    const esReparar = ['danada','necesita_retirar','caso_muni','robada','extraviada','reparando'].includes(m.estado);
+
+    if (layers.c3 && !esReparar) return;
+    if (!layers.c1 && !layers.c2 && !layers.c3) return;
+
+    const color = ledColor(m.estado);
+    const icon = makeIcon(color, layers.c2, m.ultimo_neto);
+
+    const popup = `
+      <div style="min-width:200px">
+        <div class="popup-header">
+          <div style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></div>
+          ${m.serie}
+        </div>
+        <div class="popup-row"><span>Punto</span><strong>${m.nombre_punto || '—'}</strong></div>
+        <div class="popup-row"><span>Zona</span><strong>${m.zona || '—'}</strong></div>
+        <div class="popup-row"><span>Estado</span><strong>${estadoLabel(m.estado)}</strong></div>
+        ${layers.c2 ? `<div class="popup-row"><span>Último neto</span><strong style="color:${m.ultimo_neto >= 0 ? '#059669' : '#DC2626'}">$${m.ultimo_neto !== null ? m.ultimo_neto.toFixed(2) : '—'}</strong></div>` : ''}
+        <div style="margin-top:8px">
+          <a href="/maquinas/${m.id}/historial" style="font-size:11px;color:#0A7C5C;font-weight:500">Ver historial →</a>
+        </div>
+      </div>`;
+
+    const marker = L.marker([m.lat, m.lng], { icon }).addTo(map).bindPopup(popup);
+    markers.push(marker);
+  });
+
+  if (markers.length > 0) {
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.1));
+  }
+}
+
+function toggleLayer(layer, btn) {
+  layers[layer] = !layers[layer];
+  btn.classList.toggle('on');
+  renderMarkers();
+}
+
+renderMarkers();
+</script>
 {% endblock %}

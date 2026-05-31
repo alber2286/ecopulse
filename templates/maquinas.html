@@ -86,6 +86,7 @@
       <div class="form-group"><label>Nombre del punto</label><input type="text" id="n-punto" placeholder="Pulpería Teresita"></div>
       <div class="form-group"><label>Marcador entrada inicial</label><input type="number" id="n-entrada" placeholder="0" value="0"></div>
       <div class="form-group"><label>Marcador salida inicial</label><input type="number" id="n-salida" placeholder="0" value="0"></div>
+      <div class="form-group full"><label>URL de ubicación (Google Maps)</label><input type="text" id="n-url" placeholder="https://maps.google.com/?q=..."></div>
       <div class="form-group full"><label>Notas</label><textarea id="n-notas" placeholder="Observaciones..."></textarea></div>
     </div>
     <div class="modal-footer">
@@ -183,13 +184,20 @@ function buscar(q) {
 async function guardarMaquina() {
   const serie = document.getElementById('n-serie').value.trim();
   if (!serie) { toast('Ingresá el número de serie', 'error'); return; }
+  const url_ubicacion = document.getElementById('n-url').value;
+  let latitud = null, longitud = null;
+  if (url_ubicacion) {
+    const match = url_ubicacion.match(/@(-?[\d.]+),(-?[\d.]+)/) || url_ubicacion.match(/q=(-?[\d.]+),(-?[\d.]+)/);
+    if (match) { latitud = parseFloat(match[1]); longitud = parseFloat(match[2]); }
+  }
   const r = await api('/maquinas/nueva', 'POST', {
     serie, modelo: document.getElementById('n-modelo').value,
     zona: document.getElementById('n-zona').value,
     nombre_punto: document.getElementById('n-punto').value,
     marcador_entrada: document.getElementById('n-entrada').value,
     marcador_salida: document.getElementById('n-salida').value,
-    notas: document.getElementById('n-notas').value
+    notas: document.getElementById('n-notas').value,
+    url_ubicacion, latitud, longitud
   });
   if (r.ok) { toast('Máquina registrada'); setTimeout(() => location.reload(), 1000); }
   else toast(r.error || 'Error', 'error');

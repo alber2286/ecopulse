@@ -103,7 +103,10 @@ def nueva_maquina():
         estado='ok', led='verde',
         marcador_entrada=float(data.get('marcador_entrada', 0)),
         marcador_salida=float(data.get('marcador_salida', 0)),
-        notas=data.get('notas', '')
+        notas=data.get('notas', ''),
+        url_ubicacion=data.get('url_ubicacion', ''),
+        latitud=data.get('latitud'),
+        longitud=data.get('longitud')
     )
     db.session.add(m)
     db.session.flush()
@@ -300,8 +303,25 @@ def nueva_reparacion():
 @app.route('/mapa')
 @login_required
 def mapa():
+    import json as json_lib
     maquinas = Maquina.query.filter_by(activa=True).all()
-    return render_template('mapa.html', maquinas=maquinas)
+    maquinas_json = []
+    for m in maquinas:
+        ultimo_cobro = Cobro.query.filter_by(maquina_id=m.id).order_by(Cobro.fecha.desc()).first()
+        maquinas_json.append({
+            'id': m.id,
+            'serie': m.serie,
+            'zona': m.zona,
+            'nombre_punto': m.nombre_punto,
+            'estado': m.estado,
+            'lat': m.latitud,
+            'lng': m.longitud,
+            'url_ubicacion': m.url_ubicacion or '',
+            'ultimo_neto': ultimo_cobro.neto if ultimo_cobro else None,
+            'marcador_entrada': m.marcador_entrada,
+            'marcador_salida': m.marcador_salida
+        })
+    return render_template('mapa.html', maquinas=maquinas, maquinas_json=json_lib.dumps(maquinas_json))
 
 @app.route('/exportar')
 @login_required
