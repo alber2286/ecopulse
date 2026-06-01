@@ -114,6 +114,7 @@
       <div class="form-group"><label>Nombre del punto</label><input type="text" id="e-punto"></div>
       <div class="form-group"><label>Marcador entrada</label><input type="number" id="e-entrada"></div>
       <div class="form-group"><label>Marcador salida</label><input type="number" id="e-salida"></div>
+      <div class="form-group full"><label>URL de ubicación (Google Maps)</label><input type="text" id="e-url" placeholder="https://..."></div>
       <div class="form-group"><label>Motivo del cambio</label><input type="text" id="e-motivo" placeholder="Ej: Traslado a nuevo punto"></div>
       <div class="form-group full"><label>Notas</label><textarea id="e-notas"></textarea></div>
     </div>
@@ -187,8 +188,17 @@ async function guardarMaquina() {
   const url_ubicacion = document.getElementById('n-url').value;
   let latitud = null, longitud = null;
   if (url_ubicacion) {
-    const match = url_ubicacion.match(/@(-?[\d.]+),(-?[\d.]+)/) || url_ubicacion.match(/q=(-?[\d.]+),(-?[\d.]+)/);
-    if (match) { latitud = parseFloat(match[1]); longitud = parseFloat(match[2]); }
+    const patterns = [
+      /@(-?[\d.]+),(-?[\d.]+)/,
+      /q=(-?[\d.]+),(-?[\d.]+)/,
+      /search\/(-?[\d.]+),\+?(-?[\d.]+)/,
+      /\?q=(-?[\d.]+),(-?[\d.]+)/,
+      /ll=(-?[\d.]+),(-?[\d.]+)/,
+    ];
+    for (const pattern of patterns) {
+      const match = url_ubicacion.match(pattern);
+      if (match) { latitud = parseFloat(match[1]); longitud = parseFloat(match[2]); break; }
+    }
   }
   const r = await api('/maquinas/nueva', 'POST', {
     serie, modelo: document.getElementById('n-modelo').value,
