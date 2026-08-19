@@ -46,6 +46,14 @@
         <i class="ti ti-device-mobile"></i>Panel Cobrador
       </a>
     </div>
+    {% if current_user.rol in ['admin', 'bodega'] %}
+<div class="nav-section">
+  <div class="nav-label">Bodega</div>
+  <a href="/bodega" class="nav-item {% if '/bodega' in request.path %}active{% endif %}">
+    <i class="ti ti-building-warehouse"></i>Bodega
+  </a>
+</div>
+{% endif %}
     {% if current_user.rol == 'admin' %}
     <div class="nav-section">
       <div class="nav-label">Administración</div>
