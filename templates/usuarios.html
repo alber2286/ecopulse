@@ -19,7 +19,7 @@
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:50%;background:#0A7C5C;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700">{{ u.nombre[:2].upper() }}</div><strong>{{ u.nombre }}</strong></div></td>
             <td>{{ u.email }}</td>
-            <td><span class="badge badge-{{ 'red' if u.rol=='admin' else 'blue' if u.rol=='supervisor' else 'green' if u.rol=='oficina_admin' else 'yellow' if u.rol=='oficina_cobro' else 'gray' }}">{{ u.rol.replace('_',' ').title() }}</span></td>
+            <td><span class="badge badge-{{ 'red' if u.rol=='admin' else 'blue' if u.rol=='supervisor' else 'green' if u.rol=='oficina_admin' else 'yellow' if u.rol in ['oficina_cobro','bodega'] else 'gray' }}">{{ u.rol.replace('_',' ').title() }}</span></td>
             <td style="font-size:12px;color:#6B7280">{{ u.zonas_asignadas or 'Todas' }}</td>
             <td><span class="badge badge-{{ 'green' if u.activo else 'gray' }}">{{ 'Activo' if u.activo else 'Inactivo' }}</span></td>
           </tr>
@@ -41,6 +41,7 @@
       <div class="form-group"><label>Rol *</label>
         <select id="u-rol">
           <option value="cobrador">Cobrador</option>
+          <option value="bodega">Bodega</option>
           <option value="oficina_cobro">Oficina Cobro</option>
           <option value="oficina_admin">Oficina Admin</option>
           <option value="supervisor">Supervisor</option>
