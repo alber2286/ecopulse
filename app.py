@@ -474,7 +474,18 @@ def leer_marcador():
         return jsonify({'entrada': None, 'salida': None, 'error': str(e)})
 
 
+with app.app_context():
+    db.create_all()
+    if not Usuario.query.filter_by(rol='admin').first():
+        admin = Usuario(
+            nombre='Administrador',
+            email='admin@ecopulse.com',
+            password=bcrypt.generate_password_hash('admin123').decode('utf-8'),
+            rol='admin'
+        )
+        db.session.add(admin)
+        db.session.commit()
+
 if __name__ == '__main__':
-    init_db()
     print('EcoPulse by MAGO Solutions arrancando...')
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
