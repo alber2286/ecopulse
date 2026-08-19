@@ -70,6 +70,8 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    if current_user.rol == 'cobrador':
+        return redirect(url_for('cobrador'))
     maquinas = Maquina.query.filter_by(activa=True).all()
     verdes = sum(1 for m in maquinas if m.led_color() == 'verde')
     amarillas = sum(1 for m in maquinas if m.led_color() == 'amarillo')
@@ -86,7 +88,6 @@ def dashboard():
         cobros=cobros_recientes, zonas=zonas,
         maquinas_alerta=[m for m in maquinas if m.led_color() != 'verde']
     )
-
 @app.route('/maquinas')
 @login_required
 def maquinas():
