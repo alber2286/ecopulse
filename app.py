@@ -486,7 +486,71 @@ with app.app_context():
         )
         db.session.add(admin)
         db.session.commit()
+@app.route('/bodega')
+@login_required
+def bodega():
+    if current_user.rol not in ['bodega', 'admin']:
+        return redirect(url_for('dashboard'))
+    movimientos = MovimientoBodega.query.order_by(MovimientoBodega.fecha.desc()).limit(50).all()
+    maquinas = Maquina.query.filter_by(activa=True).order_by(Maquina.serie).all()
+    cobradores = Usuario.query.filter_by(rol='cobrador', activo=True).all()
+    return render_template('bodega.html', movimientos=movimientos, maquinas=maquinas, cobradores=cobradores)
 
+@app.route('/bodega/movimiento', methods=['POST'])
+@login_required
+def bodega_movimiento():
+    if current_user.rol not in ['bodega', 'admin']:
+        return jsonify({'error': 'Sin permiso'}), 403
+    data = request.json
+    tipo = data.get('tipo')  # 'ingreso' o 'salida'
+    serie = data.get('serie', '').strip().upper()
+    m = Maquina.query.filter_by(serie=serie, activa=True).first()
+    if not m:
+        return jsonify({'error': f'Máquina {serie} no encontrada'}), 404
+
+    mov = MovimientoBodega(
+        maquina_id=m.id,
+        serie=m.serie,
+        tipo=tipo,
+        quien_entrega=data.get('quien_entrega', ''),
+        quien_recibe=data.get('quien_recibe', ''),
+        motivo=data.get('motivo', ''),
+        notas=data.get('notas', ''),
+        registrado_por=current_user.nombre
+    )
+
+    if tipo == 'ingreso':
+        m.estado = 'en_bodega'
+        m.led = 'amarillo'
+        m.cobrador_asignado_id = None
+    elif tipo == 'salida':
+        asignado_id = data.get('asignado_a_id')
+        if asignado_id:
+            cobrador = Usuario.query.get(asignado_id)
+            if cobrador:
+                m.cobrador_asignado_id = cobrador.id
+                mov.asignado_a_id = cobrador.id
+                mov.asignado_a_nombre = cobrador.nombre
+        m.estado = 'ok'
+        m.led = 'verde'
+
+    db.session.add(mov)
+    db.session.commit()
+    audit(f'BODEGA_{tipo.upper()}', f'Serie: {serie} | Entrega: {data.get("quien_entrega")} | Recibe: {data.get("quien_recibe")}')
+    return jsonify({'ok': True, 'serie': serie, 'tipo': tipo})
+
+@app.route('/api/buscar-maquina/<serie>')
+@login_required
+def buscar_maquina(serie):
+    m = Maquina.query.filter_by(serie=serie.upper(), activa=True).first()
+    if not m:
+        return jsonify({'error': 'No encontrada'}), 404
+    return jsonify({
+        'serie': m.serie,
+        'punto': m.nombre_punto or m.zona or '—',
+        'estado': m.estado_label(),
+        'cobrador': m.cobrador_asignado.nombre if m.cobrador_asignado else 'Sin asignar'
+    })
 if __name__ == '__main__':
     print('EcoPulse by MAGO Solutions arrancando...')
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
