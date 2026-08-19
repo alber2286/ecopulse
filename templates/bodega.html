@@ -1,1 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>EcoPulse — Bodega</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --eco: #0A7C5C; --eco-dark: #065C43; --eco-light: #E6F7F2;
+      --orange: #D97706; --orange-light: #FEF3C7;
+      --gray-50: #F9FAFB; --gray-100: #F3F4F6; --gray-200: #E5E7EB;
+      --gray-500: #6B7280; --gray-700: #374151; --gray-800: #1F2937;
+      --red: #DC2626; --red-light: #FEE2E2;
+      --green: #059669; --green-light: #D1FAE5;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-50); min-height: 100vh; }
+
+    /* HEADER */
+    .header { background: var(--eco); padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-icon { width: 32px; height: 32px; background: rgba(255,255,255,.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+    .header-title { color: white; font-size: 16px; font-weight: 600; }
+    .header-sub { color: rgba(255,255,255,.7); font-size: 11px; }
+    .header-user { color: rgba(255,255,255,.8); font-size: 12px; text-align: right; }
+
+    .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--gray-200); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--gray-700); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--gray-500); margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px 12px; font-size: 14px;
+      border: 1.5px solid var(--gray-200); border-radius: 10px;
+      background: white; color: var(--gray-800); font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--eco);
+    }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    /* TIPO SELECTOR */
+    .tipo-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .tipo-btn {
+      padding: 16px; border-radius: 12px; border: 2px solid var(--gray-200);
+      background: white; cursor: pointer; text-align: center; transition: all .15s;
+      font-family: inherit;
+    }
+    .tipo-btn:hover { border-color: var(--eco); }
+    .tipo-btn.selected-ingreso { border-color: var(--orange); background: var(--orange-light); }
+    .tipo-btn.selected-salida { border-color: var(--eco); background: var(--eco-light); }
+    .tipo-btn-icon { font-size: 28px; margin-bottom: 6px; }
+    .tipo-btn-label { font-size: 14px; font-weight: 700; }
+    .tipo-btn-sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+    .tipo-btn.selected-ingreso .tipo-btn-label { color: var(--orange); }
+    .tipo-btn.selected-salida .tipo-btn-label { color: var(--eco); }
+
+    /* MAQUINA INFO */
+    .maquina-info-box {
+      display: none;
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: 10px; padding: 12px; margin-bottom: 12px;
+    }
+    .maquina-info-box.show { display: block; }
+    .maquina-info-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+    .maquina-info-key { color: var(--gray-500); }
+    .maquina-info-val { font-weight: 600; color: var(--gray-800); }
+
+    /* BTN */
+    .btn-guardar {
+      width: 100%; padding: 16px; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      font-family: inherit; display: flex; align-items: center;
+      justify-content: center; gap: 8px; margin-top: 8px;
+    }
+    .btn-ingreso { background: var(--orange); color: white; }
+    .btn-ingreso:hover { background: #B45309; }
+    .btn-salida { background: var(--eco); color: white; }
+    .btn-salida:hover { background: var(--eco-dark); }
+    .btn-guardar:disabled { background: var(--gray-200); color: var(--gray-500); cursor: not-allowed; }
+
+    /* HISTORIAL */
+    .movimiento-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--gray-100);
+    }
+    .movimiento-item:last-child { border-bottom: none; }
+    .mov-badge {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px;
+      font-weight: 700; white-space: nowrap; flex-shrink: 0;
+    }
+    .mov-ingreso { background: var(--orange-light); color: var(--orange); }
+    .mov-salida { background: var(--green-light); color: var(--green); }
+    .mov-info { flex: 1; }
+    .mov-serie { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+    .mov-detalle { font-size: 12px; color: var(--gray-500); margin-top: 2px; line-height: 1.5; }
+    .mov-fecha { font-size: 11px; color: var(--gray-500); white-space: nowrap; flex-shrink: 0; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--gray-100); border-radius: 10px; padding: 4px; }
+    .tab { flex: 1; padding: 8px; border: none; background: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; color: var(--gray-500); transition: all .15s; }
+    .tab.active { background: white; color: var(--gray-800); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1F2937; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 300; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+
+    .empty-state { text-align: center; padding: 2rem; color: var(--gray-500); }
+    .empty-state i { font-size: 36px; display: block; margin-bottom: 8px; }
+
+    .asignar-box { display: none; }
+    .asignar-box.show { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-icon"><i class="ti ti-building-warehouse"></i></div>
+    <div>
+      <div class="header-title">EcoPulse</div>
+      <div class="header-sub">Panel Bodega</div>
+    </div>
+  </div>
+  <div class="header-user">
+    {{ current_user.nombre }}<br>
+    <a href="/logout" style="color:rgba(255,255,255,.6);font-size:11px">Salir</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('registro')"><i class="ti ti-plus"></i> Nuevo movimiento</button>
+    <button class="tab" onclick="switchTab('historial')"><i class="ti ti-history"></i> Historial</button>
+  </div>
+
+  <!-- TAB REGISTRO -->
+  <div class="screen active" id="tab-registro">
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-arrows-exchange"></i>Tipo de movimiento</div>
+
+      <div class="tipo-selector">
+        <button class="tipo-btn" id="btn-ingreso" onclick="seleccionarTipo('ingreso')">
+          <div class="tipo-btn-icon">📥</div>
+          <div class="tipo-btn-label">INGRESO</div>
+          <div class="tipo-btn-sub">Máquina entra a bodega</div>
+        </button>
+        <button class="tipo-btn" id="btn-salida" onclick="seleccionarTipo('salida')">
+          <div class="tipo-btn-icon">📤</div>
+          <div class="tipo-btn-label">SALIDA</div>
+          <div class="tipo-btn-sub">Máquina sale de bodega</div>
+        </button>
+      </div>
+
+      <!-- BÚSQUEDA DE SERIE -->
+      <div class="form-group">
+        <label>Número de serie *</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="inp-serie" placeholder="Ej: BO-076"
+            style="text-transform:uppercase;flex:1"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter') buscarSerie()">
+          <button onclick="buscarSerie()" style="padding:10px 16px;background:var(--eco);color:white;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600">
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <!-- INFO MÁQUINA -->
+      <div class="maquina-info-box" id="maquina-info">
+        <div class="maquina-info-row">
+          <span class="maquina-info-key">Serie</span>
+          <span class="maquina-info-val" id="info-serie">—</span>
+        </div>
+        <div class="maquina-info-row">
+          <span class="maquina-info-key">Punto</span>
+          <span class="maquina-info-val" id="info-punto">—</span>
+        </div>
+        <div class="maquina-info-row">
+          <span class="maquina-info-key">Estado</span>
+          <span class="maquina-info-val" id="info-estado">—</span>
+        </div>
+        <div class="maquina-info-row">
+          <span class="maquina-info-key">Cobrador asignado</span>
+          <span class="maquina-info-val" id="info-cobrador">—</span>
+        </div>
+      </div>
+
+      <!-- FORMULARIO -->
+      <div class="form-group">
+        <label>Quien entrega *</label>
+        <input type="text" id="inp-entrega" placeholder="Nombre de quien entrega la máquina">
+      </div>
+
+      <div class="form-group">
+        <label>Quien recibe *</label>
+        <input type="text" id="inp-recibe" placeholder="Nombre de quien recibe la máquina">
+      </div>
+
+      <div class="form-group">
+        <label>Motivo *</label>
+        <input type="text" id="inp-motivo" placeholder="Ej: Reparación, revisión, traslado...">
+      </div>
+
+      <div class="form-group">
+        <label>Notas adicionales</label>
+        <textarea id="inp-notas" placeholder="Observaciones, daños visibles, accesorios incluidos..."></textarea>
+      </div>
+
+      <!-- ASIGNAR A COBRADOR (solo en salida) -->
+      <div class="asignar-box" id="asignar-box">
+        <div class="form-group">
+          <label>Asignar a cobrador</label>
+          <select id="inp-cobrador">
+            <option value="">Sin asignar por ahora</option>
+            {% for c in cobradores %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-guardar" id="btn-guardar" onclick="guardarMovimiento()" disabled>
+        <i class="ti ti-check"></i> Registrar movimiento
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TAB HISTORIAL -->
+  <div class="screen" id="tab-historial">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-history"></i>Últimos movimientos</div>
+
+      {% if movimientos %}
+        {% for mov in movimientos %}
+        <div class="movimiento-item">
+          <span class="mov-badge mov-{{ mov.tipo }}">
+            {{ '📥 INGRESO' if mov.tipo == 'ingreso' else '📤 SALIDA' }}
+          </span>
+          <div class="mov-info">
+            <div class="mov-serie">{{ mov.serie }}</div>
+            <div class="mov-detalle">
+              <strong>Entrega:</strong> {{ mov.quien_entrega }} →
+              <strong>Recibe:</strong> {{ mov.quien_recibe }}<br>
+              <strong>Motivo:</strong> {{ mov.motivo }}
+              {% if mov.asignado_a_nombre %} · <strong>Asignado a:</strong> {{ mov.asignado_a_nombre }}{% endif %}
+              {% if mov.notas %}<br>{{ mov.notas }}{% endif %}
+            </div>
+          </div>
+          <div class="mov-fecha">
+            {{ mov.fecha.strftime('%d/%m/%Y') }}<br>
+            <span style="color:#9CA3AF">{{ mov.fecha.strftime('%H:%M') }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <i class="ti ti-building-warehouse"></i>
+          Sin movimientos registrados
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let tipoSeleccionado = null;
+let maquinaEncontrada = false;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function seleccionarTipo(tipo) {
+  tipoSeleccionado = tipo;
+  document.getElementById('btn-ingreso').className = 'tipo-btn' + (tipo === 'ingreso' ? ' selected-ingreso' : '');
+  document.getElementById('btn-salida').className = 'tipo-btn' + (tipo === 'salida' ? ' selected-salida' : '');
+
+  // Mostrar asignar cobrador solo en salida
+  document.getElementById('asignar-box').className = 'asignar-box' + (tipo === 'salida' ? ' show' : '');
+
+  // Actualizar botón
+  const btn = document.getElementById('btn-guardar');
+  btn.className = 'btn-guardar btn-' + tipo;
+  btn.innerHTML = tipo === 'ingreso'
+    ? '<i class="ti ti-arrow-bar-to-down"></i> Registrar ingreso a bodega'
+    : '<i class="ti ti-arrow-bar-up"></i> Registrar salida de bodega';
+
+  validarFormulario();
+}
+
+async function buscarSerie() {
+  const serie = document.getElementById('inp-serie').value.trim();
+  if (!serie) { showToast('Ingresa el número de serie', 'error'); return; }
+
+  try {
+    const r = await fetch('/api/buscar-maquina/' + serie);
+    const data = await r.json();
+    if (data.error) {
+      showToast('Máquina no encontrada', 'error');
+      document.getElementById('maquina-info').classList.remove('show');
+      maquinaEncontrada = false;
+      validarFormulario();
+      return;
+    }
+    document.getElementById('info-serie').textContent = data.serie;
+    document.getElementById('info-punto').textContent = data.punto;
+    document.getElementById('info-estado').textContent = data.estado;
+    document.getElementById('info-cobrador').textContent = data.cobrador;
+    document.getElementById('maquina-info').classList.add('show');
+    maquinaEncontrada = true;
+    validarFormulario();
+    showToast('✅ Máquina encontrada');
+  } catch(e) {
+    showToast('Error al buscar', 'error');
+  }
+}
+
+function validarFormulario() {
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = !(tipoSeleccionado && maquinaEncontrada);
+}
+
+async function guardarMovimiento() {
+  const serie = document.getElementById('inp-serie').value.trim();
+  const entrega = document.getElementById('inp-entrega').value.trim();
+  const recibe = document.getElementById('inp-recibe').value.trim();
+  const motivo = document.getElementById('inp-motivo').value.trim();
+
+  if (!entrega || !recibe || !motivo) {
+    showToast('Completa todos los campos obligatorios', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const payload = {
+    tipo: tipoSeleccionado,
+    serie,
+    quien_entrega: entrega,
+    quien_recibe: recibe,
+    motivo,
+    notas: document.getElementById('inp-notas').value,
+    asignado_a_id: document.getElementById('inp-cobrador')?.value || null
+  };
+
+  try {
+    const r = await fetch('/bodega/movimiento', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+
+    if (data.ok) {
+      const msg = tipoSeleccionado === 'ingreso'
+        ? `✅ ${serie} ingresada a bodega`
+        : `✅ ${serie} salió de bodega`;
+      showToast(msg);
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showToast(data.error || 'Error al guardar', 'error');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    showToast('Error de conexión', 'error');
+    btn.disabled = false;
+  }
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#DC2626' : '#1F2937';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
 
