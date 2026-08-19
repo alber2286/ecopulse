@@ -72,6 +72,8 @@ def logout():
 def dashboard():
     if current_user.rol == 'cobrador':
         return redirect(url_for('cobrador'))
+    if current_user.rol == 'bodega':
+        return redirect(url_for('bodega'))
     maquinas = Maquina.query.filter_by(activa=True).all()
     verdes = sum(1 for m in maquinas if m.led_color() == 'verde')
     amarillas = sum(1 for m in maquinas if m.led_color() == 'amarillo')
@@ -479,13 +481,18 @@ with app.app_context():
     db.create_all()
     from sqlalchemy import inspect, text
     inspector = inspect(db.engine)
-    columnas_maquinas = [c['name'] for c in inspector.get_columns('maquinas')]
-    if 'cobrador_asignado_id' not in columnas_maquinas:
-        db.session.execute(text(
-            'ALTER TABLE maquinas ADD COLUMN cobrador_asignado_id INTEGER REFERENCES usuarios(id)'
-        ))
-        db.session.commit()
-        print('Columna cobrador_asignado_id agregada a maquinas')
+
+    def asegurar_columna(tabla, columna, definicion_sql):
+        cols = [c['name'] for c in inspector.get_columns(tabla)]
+        if columna not in cols:
+            db.session.execute(text(f'ALTER TABLE {tabla} ADD COLUMN {columna} {definicion_sql}'))
+            db.session.commit()
+            print(f'Columna {columna} agregada a {tabla}')
+
+    asegurar_columna('maquinas', 'cobrador_asignado_id', 'INTEGER REFERENCES usuarios(id)')
+    asegurar_columna('movimientos_bodega', 'tipo_maquina', "VARCHAR(100) DEFAULT ''")
+    asegurar_columna('movimientos_bodega', 'zona', "VARCHAR(100) DEFAULT ''")
+
     if not Usuario.query.filter_by(rol='admin').first():
         admin = Usuario(
             nombre='Administrador',
@@ -521,6 +528,8 @@ def bodega_movimiento():
         maquina_id=m.id,
         serie=m.serie,
         tipo=tipo,
+        tipo_maquina=data.get('tipo_maquina', m.modelo or ''),
+        zona=data.get('zona', m.zona or ''),
         quien_entrega=data.get('quien_entrega', ''),
         quien_recibe=data.get('quien_recibe', ''),
         motivo=data.get('motivo', ''),
@@ -557,6 +566,8 @@ def buscar_maquina(serie):
     return jsonify({
         'serie': m.serie,
         'punto': m.nombre_punto or m.zona or '—',
+        'zona': m.zona or '',
+        'modelo': m.modelo or '',
         'estado': m.estado_label(),
         'cobrador': m.cobrador_asignado.nombre if m.cobrador_asignado else 'Sin asignar'
     })
