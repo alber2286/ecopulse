@@ -477,6 +477,15 @@ def leer_marcador():
 
 with app.app_context():
     db.create_all()
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    columnas_maquinas = [c['name'] for c in inspector.get_columns('maquinas')]
+    if 'cobrador_asignado_id' not in columnas_maquinas:
+        db.session.execute(text(
+            'ALTER TABLE maquinas ADD COLUMN cobrador_asignado_id INTEGER REFERENCES usuarios(id)'
+        ))
+        db.session.commit()
+        print('Columna cobrador_asignado_id agregada a maquinas')
     if not Usuario.query.filter_by(rol='admin').first():
         admin = Usuario(
             nombre='Administrador',
