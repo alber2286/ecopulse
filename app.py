@@ -7,7 +7,11 @@ import os, json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'ecopulse-mago-solutions-2026')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecopulse.db'
+import os as _os
+_db_url = _os.environ.get('DATABASE_URL', 'sqlite:///ecopulse.db')
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads/contratos'
 
