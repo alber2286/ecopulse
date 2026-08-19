@@ -196,6 +196,16 @@
 
       <!-- FORMULARIO -->
       <div class="form-group">
+        <label>Tipo de máquina *</label>
+        <input type="text" id="inp-tipo-maquina" placeholder="Ej: Slot, Pusher, Garra...">
+      </div>
+
+      <div class="form-group">
+        <label>Zona *</label>
+        <input type="text" id="inp-zona" placeholder="Ej: Alajuela, San José...">
+      </div>
+
+      <div class="form-group">
         <label>Quien entrega *</label>
         <input type="text" id="inp-entrega" placeholder="Nombre de quien entrega la máquina">
       </div>
@@ -249,6 +259,7 @@
           <div class="mov-info">
             <div class="mov-serie">{{ mov.serie }}</div>
             <div class="mov-detalle">
+              {% if mov.tipo_maquina or mov.zona %}<strong>{{ mov.tipo_maquina }}</strong>{% if mov.zona %} · Zona: {{ mov.zona }}{% endif %}<br>{% endif %}
               <strong>Entrega:</strong> {{ mov.quien_entrega }} →
               <strong>Recibe:</strong> {{ mov.quien_recibe }}<br>
               <strong>Motivo:</strong> {{ mov.motivo }}
@@ -323,6 +334,8 @@ async function buscarSerie() {
     document.getElementById('info-estado').textContent = data.estado;
     document.getElementById('info-cobrador').textContent = data.cobrador;
     document.getElementById('maquina-info').classList.add('show');
+    if (data.modelo) document.getElementById('inp-tipo-maquina').value = data.modelo;
+    if (data.zona) document.getElementById('inp-zona').value = data.zona;
     maquinaEncontrada = true;
     validarFormulario();
     showToast('✅ Máquina encontrada');
@@ -338,11 +351,13 @@ function validarFormulario() {
 
 async function guardarMovimiento() {
   const serie = document.getElementById('inp-serie').value.trim();
+  const tipoMaquina = document.getElementById('inp-tipo-maquina').value.trim();
+  const zona = document.getElementById('inp-zona').value.trim();
   const entrega = document.getElementById('inp-entrega').value.trim();
   const recibe = document.getElementById('inp-recibe').value.trim();
   const motivo = document.getElementById('inp-motivo').value.trim();
 
-  if (!entrega || !recibe || !motivo) {
+  if (!tipoMaquina || !zona || !entrega || !recibe || !motivo) {
     showToast('Completa todos los campos obligatorios', 'error');
     return;
   }
@@ -354,6 +369,8 @@ async function guardarMovimiento() {
   const payload = {
     tipo: tipoSeleccionado,
     serie,
+    tipo_maquina: tipoMaquina,
+    zona,
     quien_entrega: entrega,
     quien_recibe: recibe,
     motivo,
@@ -395,4 +412,3 @@ function showToast(msg, type='success') {
 </script>
 </body>
 </html>
-
