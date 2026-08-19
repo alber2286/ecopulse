@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
-from models import db, Usuario, Maquina, Cobro, Reparacion, HistorialUbicacion, Contrato, AuditLog
+from models import db, Usuario, Maquina, Cobro, Reparacion, HistorialUbicacion, Contrato, AuditLog, MovimientoBodega
 from datetime import datetime
 import os, json
 
