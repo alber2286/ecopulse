@@ -152,6 +152,8 @@ class MovimientoBodega(db.Model):
     maquina_id = db.Column(db.Integer, db.ForeignKey('maquinas.id'), nullable=False)
     serie = db.Column(db.String(50))
     tipo = db.Column(db.String(10))  # 'ingreso' o 'salida'
+    tipo_maquina = db.Column(db.String(100), default='')
+    zona = db.Column(db.String(100), default='')
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     quien_entrega = db.Column(db.String(100))
     quien_recibe = db.Column(db.String(100))
