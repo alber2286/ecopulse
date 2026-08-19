@@ -15,7 +15,6 @@
     }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-50); min-height: 100vh; }
 
-    /* HEADER */
     .header { background: var(--eco); padding: 16px; display: flex; align-items: center; justify-content: space-between; }
     .header-brand { display: flex; align-items: center; gap: 10px; }
     .header-icon { width: 32px; height: 32px; background: rgba(255,255,255,.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
@@ -23,21 +22,17 @@
     .header-sub { color: rgba(255,255,255,.7); font-size: 11px; }
     .header-user { color: rgba(255,255,255,.8); font-size: 12px; text-align: right; }
 
-    /* CONTENT */
     .content { padding: 16px; max-width: 480px; margin: 0 auto; }
 
-    /* CARDS */
     .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--gray-200); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     .card-title { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
 
-    /* FORM */
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--gray-500); margin-bottom: 4px; }
     .form-group input, .form-group select { width: 100%; padding: 10px 12px; font-size: 15px; border: 1.5px solid var(--gray-200); border-radius: 10px; background: white; color: var(--gray-800); font-family: inherit; }
     .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--eco); }
     .form-group input[readonly] { background: var(--gray-50); color: var(--eco); font-weight: 600; }
 
-    /* MARCADORES */
     .marcadores-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .marcador-box { background: var(--gray-50); border-radius: 10px; padding: 12px; border: 1.5px solid var(--gray-200); }
     .marcador-box.entrada { border-color: #A7F3D0; background: #F0FDF4; }
@@ -51,32 +46,30 @@
     .marcador-box.entrada input { border-color: #A7F3D0; color: #065F46; }
     .marcador-box.salida input { border-color: #FECACA; color: #991B1B; }
 
-    /* RESULTADOS */
     .resultados { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .resultado-box { background: var(--gray-50); border-radius: 10px; padding: 10px; text-align: center; border: 1px solid var(--gray-200); }
     .resultado-label { font-size: 10px; color: var(--gray-500); margin-bottom: 4px; }
     .resultado-valor { font-size: 16px; font-weight: 700; }
 
-    /* FOTO BUTTON */
     .btn-foto { width: 100%; padding: 14px; background: var(--eco); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; font-family: inherit; }
     .btn-foto:active { background: var(--eco-dark); }
     .btn-manual { width: 100%; padding: 10px; background: white; color: var(--gray-700); border: 1.5px solid var(--gray-200); border-radius: 12px; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
 
-    /* BTN GUARDAR */
     .btn-guardar { width: 100%; padding: 16px; background: var(--eco); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 8px; }
     .btn-guardar:disabled { background: var(--gray-200); color: var(--gray-500); }
 
-    /* PREVIEW FOTO */
+    /* BOTÓN NUEVA MÁQUINA */
+    .btn-nueva-maquina { width: 100%; padding: 12px; background: white; color: var(--eco); border: 2px dashed var(--eco); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; margin-top: 4px; }
+    .btn-nueva-maquina:active { background: var(--eco-light); }
+
     .foto-preview { width: 100%; border-radius: 10px; margin-bottom: 10px; display: none; }
     .foto-preview img { width: 100%; border-radius: 10px; border: 2px solid var(--eco); }
 
-    /* PROCESANDO */
     .procesando { display: none; background: var(--eco-light); border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 10px; }
     .procesando-text { font-size: 13px; color: var(--eco); font-weight: 500; margin-top: 6px; }
     .spinner { width: 24px; height: 24px; border: 3px solid var(--eco-light); border-top-color: var(--eco); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* GANANCIA */
     .ganancia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .ganancia-box { border-radius: 10px; padding: 12px; text-align: center; }
     .ganancia-eco { background: #F0FDF4; border: 1px solid #A7F3D0; }
@@ -88,7 +81,6 @@
     .ganancia-eco .ganancia-valor { color: #059669; }
     .ganancia-cliente .ganancia-valor { color: #1D4ED8; }
 
-    /* MAQUINA SELECTOR */
     .maquina-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; border: 1.5px solid var(--gray-200); margin-bottom: 8px; cursor: pointer; background: white; }
     .maquina-item:active { background: var(--eco-light); border-color: var(--eco); }
     .maquina-led { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
@@ -99,18 +91,25 @@
     .maquina-serie { font-size: 14px; font-weight: 600; color: var(--gray-800); }
     .maquina-punto { font-size: 12px; color: var(--gray-500); }
 
-    /* SCREENS */
     .screen { display: none; }
     .screen.active { display: block; }
 
     .badge-ok { background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
 
-    /* DIGITAL PANEL */
     .digital-panel { display: none; background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
     .digital-panel.show { display: block; }
     .digital-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1F2937; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    /* MODAL NUEVA MÁQUINA */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-end; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px 20px 0 0; padding: 24px 16px 40px; width: 100%; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+    .modal-close { background: none; border: none; font-size: 22px; color: var(--gray-500); cursor: pointer; }
+    .modal-nota { font-size: 12px; color: var(--gray-500); background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px; margin-bottom: 16px; }
+
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1F2937; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 300; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
     .toast.show { opacity: 1; }
   </style>
 </head>
@@ -152,6 +151,11 @@
           No tenés máquinas asignadas
         </div>
       {% endif %}
+
+      <!-- BOTÓN NUEVA MÁQUINA -->
+      <button class="btn-nueva-maquina" onclick="abrirModalNuevaMaquina()">
+        <i class="ti ti-plus"></i> Registrar nueva máquina
+      </button>
     </div>
   </div>
 </div>
@@ -160,7 +164,6 @@
 <div class="screen" id="screen-cobro">
   <div class="content">
 
-    <!-- INFO MÁQUINA -->
     <div class="card">
       <div style="display:flex;align-items:center;gap:10px">
         <button onclick="volverLista()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:20px"><i class="ti ti-arrow-left"></i></button>
@@ -172,7 +175,6 @@
       </div>
     </div>
 
-    <!-- FOTO IA -->
     <div class="card">
       <div class="card-title"><i class="ti ti-camera"></i>Leer marcadores con IA</div>
 
@@ -194,7 +196,6 @@
         <i class="ti ti-keyboard"></i> Ingresar datos digitales manualmente
       </button>
 
-      <!-- PANEL DIGITAL -->
       <div class="digital-panel" id="digitalPanel">
         <div class="card-title" style="margin-bottom:8px"><i class="ti ti-device-desktop"></i>Marcador digital</div>
         <div class="digital-grid">
@@ -214,7 +215,6 @@
       </div>
     </div>
 
-    <!-- MARCADORES -->
     <div class="card">
       <div class="card-title"><i class="ti ti-calculator"></i>Lectura de marcadores</div>
       <div class="marcadores-grid">
@@ -246,7 +246,6 @@
       </div>
     </div>
 
-    <!-- DINERO FÍSICO Y GANANCIA -->
     <div class="card">
       <div class="card-title"><i class="ti ti-cash"></i>Dinero encontrado</div>
       <div class="form-group">
@@ -272,7 +271,6 @@
       </div>
     </div>
 
-    <!-- NOTA -->
     <div class="card">
       <div class="card-title"><i class="ti ti-notes"></i>Nota del cobro</div>
       <textarea id="cobro-nota" placeholder="Observaciones, estado de la máquina, incidencias..." style="width:100%;padding:10px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:13px;min-height:80px;font-family:inherit;resize:none"></textarea>
@@ -283,6 +281,43 @@
     </button>
 
     <div style="height:30px"></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA MÁQUINA -->
+<div class="modal-overlay" id="modalNuevaMaquina">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-plus" style="color:var(--eco);margin-right:6px"></i>Nueva máquina</div>
+      <button class="modal-close" onclick="cerrarModalNuevaMaquina()">✕</button>
+    </div>
+    <div class="modal-nota">
+      ⚠️ Solo registra la máquina. Los marcadores iniciales los configura el administrador.
+    </div>
+    <div class="form-group">
+      <label>Número de serie *</label>
+      <input type="text" id="nm-serie" placeholder="Ej: BO-076" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label>Nombre del punto *</label>
+      <input type="text" id="nm-punto" placeholder="Ej: Pulpería Teresita">
+    </div>
+    <div class="form-group">
+      <label>Zona</label>
+      <select id="nm-zona">
+        <option value="">Seleccionar zona</option>
+        <option>San José Centro</option>
+        <option>Alajuela</option>
+        <option>Heredia</option>
+        <option>Cartago</option>
+        <option>Limón</option>
+        <option>Guanacaste</option>
+        <option>Puntarenas</option>
+      </select>
+    </div>
+    <button class="btn-guardar" onclick="guardarNuevaMaquina()">
+      <i class="ti ti-check"></i> Registrar máquina
+    </button>
   </div>
 </div>
 
@@ -321,6 +356,50 @@ function volverLista() {
   document.getElementById('screen-lista').classList.add('active');
 }
 
+// MODAL NUEVA MÁQUINA
+function abrirModalNuevaMaquina() {
+  document.getElementById('nm-serie').value = '';
+  document.getElementById('nm-punto').value = '';
+  document.getElementById('nm-zona').value = '';
+  document.getElementById('modalNuevaMaquina').classList.add('open');
+}
+
+function cerrarModalNuevaMaquina() {
+  document.getElementById('modalNuevaMaquina').classList.remove('open');
+}
+
+async function guardarNuevaMaquina() {
+  const serie = document.getElementById('nm-serie').value.trim();
+  const punto = document.getElementById('nm-punto').value.trim();
+  const zona = document.getElementById('nm-zona').value;
+  if (!serie || !punto) { showToast('Serie y punto son obligatorios', 'error'); return; }
+
+  const btn = document.querySelector('#modalNuevaMaquina .btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const r = await fetch('/maquinas/nueva', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      serie, nombre_punto: punto, zona,
+      marcador_entrada: 0, marcador_salida: 0
+    })
+  });
+  const data = await r.json();
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-check"></i> Registrar máquina';
+
+  if (data.ok) {
+    cerrarModalNuevaMaquina();
+    showToast('✅ Máquina registrada. El admin configurará los marcadores.');
+    setTimeout(() => location.reload(), 2000);
+  } else {
+    showToast(data.error || 'Error al registrar', 'error');
+  }
+}
+
 function tomarFoto() {
   document.getElementById('inputFoto').click();
 }
@@ -331,9 +410,7 @@ async function procesarFoto(input) {
   document.getElementById('procesando').style.display = 'block';
   document.getElementById('procesando').querySelector('.procesando-text').textContent = 'Comprimiendo imagen...';
   try {
-    // Compress image automatically - invisible to user
     const base64 = await comprimirImagen(file, 400, 0.5);
-    // Show preview
     document.getElementById('fotoImg').src = 'data:image/jpeg;base64,' + base64;
     document.getElementById('fotoPreview').style.display = 'block';
     document.getElementById('procesando').querySelector('.procesando-text').textContent = 'IA analizando marcadores...';
@@ -368,19 +445,12 @@ function comprimirImagen(file, maxWidth, quality) {
     img.onload = function() {
       URL.revokeObjectURL(url);
       const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-      if (width > maxWidth) {
-        height = Math.round(height * maxWidth / width);
-        width = maxWidth;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
+      let width = img.width, height = img.height;
+      if (width > maxWidth) { height = Math.round(height * maxWidth / width); width = maxWidth; }
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
       const base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-      canvas.width = 1;
-      canvas.height = 1;
+      canvas.width = 1; canvas.height = 1;
       resolve(base64);
     };
     img.onerror = reject;
@@ -433,9 +503,7 @@ async function guardarCobro() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      serie,
-      marcador_entrada_actual: B,
-      marcador_salida_actual: D,
+      serie, marcador_entrada_actual: B, marcador_salida_actual: D,
       semana: new Date().toISOString().split('T')[0],
       nota: document.getElementById('cobro-nota').value,
       dinero_fisico: document.getElementById('dinero-fisico').value,
